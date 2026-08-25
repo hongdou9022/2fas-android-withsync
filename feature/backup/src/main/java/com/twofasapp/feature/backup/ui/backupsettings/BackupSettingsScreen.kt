@@ -40,8 +40,6 @@ internal fun BackupSettingsScreen(
 
     BackupSettingsScreenContent(
         uiState = uiState,
-        onSetPassword = { viewModel.setPassword(it) },
-        onRemovePassword = { viewModel.removePassword(it) },
         onDeleteBackup = { viewModel.deleteBackup(it) },
         onFinish = { goBack() },
         onEventConsumed = { viewModel.consumeEvent(it) },
@@ -51,8 +49,6 @@ internal fun BackupSettingsScreen(
 @Composable
 private fun BackupSettingsScreenContent(
     uiState: BackupSettingsUiState,
-    onSetPassword: (String) -> Unit = {},
-    onRemovePassword: (String) -> Unit = {},
     onDeleteBackup: (String?) -> Unit = {},
     onFinish: () -> Unit = {},
     onEventConsumed: (BackupSettingsUiEvent) -> Unit = {},
@@ -61,8 +57,6 @@ private fun BackupSettingsScreenContent(
     val strings = LocalContext.strings
     var showConfirmDeleteDialog by remember { mutableStateOf(false) }
     var showConnectionErrorDialog by remember { mutableStateOf(false) }
-    var showSetPasswordDialog by remember { mutableStateOf(false) }
-    var showRemovePasswordDialog by remember { mutableStateOf(false) }
     var showWipePasswordDialog by remember { mutableStateOf(false) }
     var showPasswordError by remember { mutableStateOf(false) }
 
@@ -72,11 +66,6 @@ private fun BackupSettingsScreenContent(
                 BackupSettingsUiEvent.Finish -> onFinish()
                 BackupSettingsUiEvent.ShowWipePasswordDialogError -> {
                     showWipePasswordDialog = true
-                    showPasswordError = true
-                }
-
-                BackupSettingsUiEvent.ShowRemovePasswordDialogError -> {
-                    showRemovePasswordDialog = true
                     showPasswordError = true
                 }
             }
@@ -91,29 +80,15 @@ private fun BackupSettingsScreenContent(
         LazyColumn(
             modifier = Modifier.padding(padding),
         ) {
-            if (uiState.encrypted || uiState.passwordSet) {
+            if (uiState.syncActive.not()) {
                 item {
                     SettingsLink(
-                        title = strings.backupSettingsRemovePasswordTitle,
-                        subtitle = strings.backupSettingsRemovePasswordMsg,
-                        icon = MdtIcons.LockOpen,
-                        enabled = uiState.syncStatus != CloudSyncStatus.Syncing,
-                        onClick = { showRemovePasswordDialog = true },
+                        title = strings.backupSettingsInactiveTitle,
+                        subtitle = strings.backupSettingsInactiveMessage,
+                        icon = MdtIcons.CloudOff,
                     )
                 }
             } else {
-                item {
-                    SettingsLink(
-                        title = strings.backupSettingsSetPasswordTitle,
-                        subtitle = strings.backupSettingsSetPasswordMsg,
-                        icon = MdtIcons.Lock,
-                        enabled = uiState.syncStatus != CloudSyncStatus.Syncing,
-                        onClick = { showSetPasswordDialog = true },
-                    )
-                }
-            }
-
-            if (uiState.syncActive) {
                 item {
                     SettingsLink(
                         title = strings.backupSettingsDeleteBackupTitle,
@@ -218,34 +193,6 @@ private fun BackupSettingsScreenContent(
                 positive = strings.commonContinue,
                 error = if (showPasswordError) strings.backupIncorrectPassword else null,
                 onPositive = { onDeleteBackup(it) },
-            )
-        }
-
-        if (showSetPasswordDialog) {
-            PasswordDialog(
-                onDismissRequest = {
-                    showSetPasswordDialog = false
-                    showPasswordError = false
-                },
-                title = strings.backupSetCloudPasswordTitle,
-                body = strings.backupSetCloudPasswordMsg,
-                positive = strings.commonContinue,
-                onPositive = { onSetPassword(it) },
-            )
-        }
-
-        if (showRemovePasswordDialog) {
-            PasswordDialog(
-                onDismissRequest = {
-                    showRemovePasswordDialog = false
-                    showPasswordError = false
-                },
-                confirmRequired = false,
-                title = strings.backupRemoveCloudPasswordTitle,
-                body = strings.backupRemoveCloudPasswordMsg,
-                positive = strings.commonContinue,
-                error = if (showPasswordError) strings.backupIncorrectPassword else null,
-                onPositive = { onRemovePassword(it) },
             )
         }
     }

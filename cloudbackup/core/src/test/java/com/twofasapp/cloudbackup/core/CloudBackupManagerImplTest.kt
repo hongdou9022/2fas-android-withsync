@@ -11,6 +11,7 @@ import com.twofasapp.data.services.BackupRepository
 import com.twofasapp.data.services.domain.BackupContent
 import com.twofasapp.data.services.domain.BackupContentCreateResult
 import com.twofasapp.data.services.domain.BackupGroup
+import com.twofasapp.prefs.model.RemoteBackupKey
 import com.twofasapp.prefs.usecase.RemoteBackupKeyPreference
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -244,19 +245,21 @@ class CloudBackupManagerImplTest {
     }
 
     @Test
-    fun `restore imports without triggering another cloud backup`() = runTest {
+    fun `unencrypted restore ignores saved password and does not trigger another cloud backup`() = runTest {
         val backupFile = "2fas-backup-20260101-100000-000.2fas"
         val provider = FakeProvider(
             idValue = "webdav",
             initialFiles = listOf(file(backupFile)),
             initialContents = mapOf(backupFile to "backup-content"),
         )
+        coEvery { keyPreference.get() } returns RemoteBackupKey(saltEncoded = "saved-salt", keyEncoded = "saved-key")
         coEvery { backupRepository.readBackupContentSerialized("backup-content") } returns BackupContent.Empty
         coEvery { backupRepository.import(BackupContent.Empty, triggerCloudBackup = false) } returns Unit
 
         val result = manager(provider).restore(provider.id, backupFile, null)
 
         assertTrue(result is CloudBackupResult.Success)
+        coVerify(exactly = 0) { backupRepository.decryptBackupContent(any(), any(), any()) }
         coVerify(exactly = 1) { backupRepository.import(BackupContent.Empty, triggerCloudBackup = false) }
     }
 

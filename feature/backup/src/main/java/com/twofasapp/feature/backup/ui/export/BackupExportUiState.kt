@@ -1,6 +1,7 @@
 package com.twofasapp.feature.backup.ui.export
 
 internal data class BackupExportUiState(
+    val passwordChecked: Boolean = false,
     val passwordSet: Boolean = false,
     val events: List<BackupExportUiEvent> = emptyList(),
 )
@@ -14,4 +15,5 @@ internal sealed interface BackupExportUiEvent {
     data object ShareError : BackupExportUiEvent
     data object DownloadError : BackupExportUiEvent
     data object DownloadSuccess : BackupExportUiEvent
+    data object ShowSetPasswordDialog : BackupExportUiEvent
 }

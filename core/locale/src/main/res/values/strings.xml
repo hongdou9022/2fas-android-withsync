@@ -980,12 +980,14 @@
     <string name="pass_promo_banner_negative_cta">Don\'t show again</string>
     <string name="appearance_dynamic_colors">Dynamic Colors</string>
     <string name="appearance_dynamic_colors_description">Dynamically change the app colors based on your wallpaper.</string>
-    <string name="backup_password_set_subtitle">Use one password to protect Google Drive sync, cloud backups, and local exports.</string>
+    <string name="backup_security_header">Backup encryption</string>
+    <string name="backup_password_set_subtitle">Use one password to protect Google Drive sync, cloud backups, and encrypted local exports.</string>
     <string name="backup_password_remove_subtitle">Stop encrypting new Google Drive, cloud, and local backup files.</string>
     <string name="backup_password_set_dialog">This password will protect Google Drive sync, cloud backups, and local exports. Keep it somewhere safe.</string>
     <string name="backup_password_remove_dialog">Enter the shared backup password to remove it. Existing encrypted files will still require their original password.</string>
-    <string name="backup_export_shared_password_on">This export will use your shared backup password.</string>
-    <string name="backup_export_shared_password_off">No backup password is set. This export will not be encrypted.</string>
+    <string name="backup_password_removed">Backup password removed.</string>
+    <string name="backup_settings_inactive_title">Google Drive sync is not enabled</string>
+    <string name="backup_settings_inactive_message">Once enabled, your sync account, status, and backup management options will appear here.</string>
     <string name="cloud_backup_header">Cloud backup</string>
     <string name="cloud_backup_entry_title">Cloud backups</string>
     <string name="cloud_backup_entry_subtitle">Create timestamped backup files in one or more cloud services.</string>

@@ -12,6 +12,7 @@ internal data class BackupUiState(
     val showError: Boolean = false,
     val error: CloudSyncError? = null,
     val exportEnabled: Boolean = false,
+    val passwordSet: Boolean = false,
     val cloudBackupStatus: CloudBackupStatus? = null,
     val cloudSyncStatus: CloudSyncStatus = CloudSyncStatus.Default,
     val events: List<BackupUiEvent> = emptyList(),
@@ -24,5 +25,7 @@ internal sealed interface BackupUiEvent {
     data class SignInUnknownError(val msg: String?) : BackupUiEvent
     data object ShowPasswordDialog : BackupUiEvent
     data object ShowPasswordDialogError : BackupUiEvent
+    data object ShowRemoveBackupPasswordDialogError : BackupUiEvent
+    data object BackupPasswordRemoved : BackupUiEvent
     data object FinishSuccess : BackupUiEvent
 }

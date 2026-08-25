@@ -3,7 +3,6 @@ package com.twofasapp.feature.backup.ui.backupsettings
 import androidx.lifecycle.ViewModel
 import com.twofasapp.common.ktx.launchScoped
 import com.twofasapp.data.services.BackupRepository
-import com.twofasapp.data.services.domain.CloudSyncTrigger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -32,42 +31,6 @@ internal class BackupSettingsViewModel(
                 uiState.update {
                     it.copy(syncStatus = syncStatus)
                 }
-            }
-        }
-
-        launchScoped {
-            backupRepository.observeBackupPasswordSet().collect { passwordSet ->
-                uiState.update { it.copy(passwordSet = passwordSet) }
-            }
-        }
-    }
-
-    fun setPassword(password: String) {
-        launchScoped {
-            backupRepository.setBackupPassword(password)
-            if (uiState.value.syncActive) {
-                backupRepository.dispatchCloudSync(CloudSyncTrigger.SetPassword, password)
-            }
-        }
-    }
-
-    fun removePassword(password: String) {
-        launchScoped {
-            val isCorrect = if (uiState.value.syncActive && uiState.value.encrypted) {
-                backupRepository.checkCloudBackupPassword(password)
-            } else {
-                backupRepository.checkBackupPassword(password)
-            }
-
-            if (isCorrect.not()) {
-                publishEvent(BackupSettingsUiEvent.ShowRemovePasswordDialogError)
-                return@launchScoped
-            }
-
-            if (uiState.value.syncActive) {
-                backupRepository.dispatchCloudSync(CloudSyncTrigger.RemovePassword, password)
-            } else {
-                backupRepository.setBackupPassword(null)
             }
         }
     }
