@@ -1,3 +1,5 @@
+import com.android.build.api.variant.FilterConfiguration
+
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.twofasAndroidApplication)
@@ -15,21 +17,35 @@ android {
 
     defaultConfig {
         applicationId = "com.cloud.twoasapp"
-        versionName = "5.5.3"
-        versionCode = 5000034
+        versionName = "5.5.3-sync.1"
+        versionCode = 5000035
     }
 
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
     }
 }
 
 androidComponents {
     onVariants { variant ->
         variant.outputs.forEach { output ->
+            val abi = output.filters
+                .firstOrNull { it.filterType == FilterConfiguration.FilterType.ABI }
+                ?.identifier
+                ?: "universal"
+
             output.outputFileName.set(
                 output.versionName.zip(output.versionCode) { versionName, versionCode ->
-                    "TwoFas-$versionName-${(versionCode ?: 0) - 5000000}.apk"
+                    "TwoFas-$versionName-${(versionCode ?: 0) - 5000000}-$abi.apk"
                 }
             )
         }
