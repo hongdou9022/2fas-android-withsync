@@ -17,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId = "com.cloud.twoasapp"
-        versionName = "5.5.3-sync.1"
-        versionCode = 5000035
+        versionName = "5.5.3-sync.2"
+        versionCode = 5000036
     }
 
     ksp {
