@@ -61,8 +61,6 @@ class BackupRepositoryImpl(
 ) : BackupRepository {
 
     private val cloudSyncStatusFlow = MutableStateFlow<CloudSyncStatus>(CloudSyncStatus.Default)
-    private val passwordForCloudSync = MutableStateFlow<String?>(null)
-
     override fun dispatchCloudSync(trigger: CloudSyncTrigger, password: String?) {
         cloudSyncWorkDispatcher.tryDispatch(
             trigger = trigger,
@@ -74,7 +72,6 @@ class BackupRepositoryImpl(
         GlobalScope.launch {
             remoteBackupStatusPreference.put(RemoteBackupStatusEntity(schemaVersion = BackupContent.CurrentSchema))
             remoteBackupStatusPreference.delete()
-            remoteBackupKeyPreference.delete()
             wipeGoogleDriveWorkDispatcher.dispatch()
         }
     }
@@ -131,6 +128,14 @@ class BackupRepositoryImpl(
         return serializeBackupContent(createBackupContent(password, keyEncoded, saltEncoded, account).backupContent)
     }
 
+    override suspend fun createBackupContentSerializedWithBackupKey(): String {
+        val key = remoteBackupKeyPreference.get()
+        return createBackupContentSerialized(
+            keyEncoded = key.takeIf { it.isSet() }?.keyEncoded,
+            saltEncoded = key.takeIf { it.isSet() }?.saltEncoded,
+        )
+    }
+
     override suspend fun readBackupContent(
         fileUri: Uri,
     ): BackupContent {
@@ -147,6 +152,16 @@ class BackupRepositoryImpl(
                 val contentSerialized = it.bufferedReader(Charsets.UTF_8).use(BufferedReader::readText)
                 json.decodeFromString<BackupContent>(contentSerialized)
             }
+        }
+    }
+
+    override suspend fun readBackupContentSerialized(content: String): BackupContent {
+        return withContext(dispatchers.io) {
+            if (content.toByteArray(Charsets.UTF_8).size > 100 * 1024 * 1024) {
+                throw FileTooBigException()
+            }
+
+            json.decodeFromString<BackupContent>(content)
         }
     }
 
@@ -181,7 +196,7 @@ class BackupRepositoryImpl(
         }
     }
 
-    override suspend fun import(backupContent: BackupContent) {
+    override suspend fun import(backupContent: BackupContent, triggerCloudBackup: Boolean) {
         withContext(dispatchers.io) {
             // Import groups
             backupContent.groups.forEach { group ->
@@ -224,7 +239,7 @@ class BackupRepositoryImpl(
                 servicesRepository.checkServiceValid(service)
             }
 
-            servicesRepository.addServices(servicesToImport)
+            servicesRepository.addServices(servicesToImport, triggerCloudBackup)
         }
     }
 
@@ -243,7 +258,6 @@ class BackupRepositoryImpl(
         remoteBackupStatusPreference.put {
             it.copy(state = RemoteBackupStatusEntity.State.NOT_CONFIGURED, reference = null)
         }
-        remoteBackupKeyPreference.delete()
     }
 
     override suspend fun getCloudBackup(password: String?): CloudBackupGetResult {
@@ -283,7 +297,6 @@ class BackupRepositoryImpl(
                             }
                         }
                     } else {
-                        remoteBackupKeyPreference.delete()
                         CloudBackupGetResult.Success(backupContent)
                     }
                 } catch (e: Exception) {
@@ -383,8 +396,6 @@ class BackupRepositoryImpl(
                         keyEncoded = result.keyEncoded,
                     )
                 }
-            } else {
-                remoteBackupKeyPreference.delete()
             }
 
             return isCorrect
@@ -405,20 +416,48 @@ class BackupRepositoryImpl(
         }
     }
 
+    override suspend fun setBackupPassword(password: String?) {
+        if (password.isNullOrEmpty()) {
+            remoteBackupKeyPreference.delete()
+            return
+        }
+
+        remoteBackupKeyPreference.put(deriveBackupKey(password))
+    }
+
+    override suspend fun checkBackupPassword(password: String): Boolean {
+        val currentKey = remoteBackupKeyPreference.get()
+        if (currentKey.isSet().not()) return false
+
+        return runCatching {
+            deriveBackupKey(password, currentKey.saltEncoded).keyEncoded == currentKey.keyEncoded
+        }.getOrDefault(false)
+    }
+
+    override fun observeBackupPasswordSet(): Flow<Boolean> =
+        remoteBackupKeyPreference.flow(emitOnSubscribe = true).map { it.isSet() }
+
+    private suspend fun deriveBackupKey(password: String, saltEncoded: String? = null): RemoteBackupKey =
+        withContext(dispatchers.io) {
+            backupCipher.encrypt(
+                reference = BackupContent.Reference,
+                services = "",
+                password = password,
+                saltEncoded = saltEncoded,
+            ).let {
+                RemoteBackupKey(
+                    saltEncoded = it.saltEncoded,
+                    keyEncoded = it.keyEncoded,
+                )
+            }
+        }
+
     override fun observeCloudSyncStatus(): Flow<CloudSyncStatus> {
         return cloudSyncStatusFlow
     }
 
     override fun publishCloudSyncStatus(status: CloudSyncStatus) {
         cloudSyncStatusFlow.tryEmit(status)
-    }
-
-    override fun setPasswordForCloudSync(password: String?) {
-        passwordForCloudSync.tryEmit(password)
-    }
-
-    override fun observePasswordForCloudSync(): Flow<String?> {
-        return passwordForCloudSync
     }
 
     private fun serializeBackupContent(backupContent: BackupContent): String {

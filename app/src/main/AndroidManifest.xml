@@ -29,7 +29,7 @@
         android:allowBackup="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/android__app_name"
+        android:label="2FAS"
         android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.App">

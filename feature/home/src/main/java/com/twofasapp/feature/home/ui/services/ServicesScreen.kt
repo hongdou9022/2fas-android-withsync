@@ -57,6 +57,7 @@ import com.twofasapp.core.design.foundation.lazy.listItem
 import com.twofasapp.core.design.foundation.screen.EmptyScreen
 import com.twofasapp.core.design.ktx.currentActivity
 import com.twofasapp.core.design.ktx.openSafely
+import com.twofasapp.core.design.ktx.toastShort
 import com.twofasapp.data.services.domain.Group
 import com.twofasapp.data.session.domain.ServicesSort
 import com.twofasapp.data.session.domain.ServicesStyle
@@ -117,6 +118,7 @@ internal fun ServicesRoute(
         onDisablePassBannerClick = { viewModel.disablePassBanner() },
         onIncrementHotpCounterClick = { viewModel.incrementHotpCounter(it) },
         onRevealClick = { viewModel.reveal(it) },
+        onPullBrowserRequest = viewModel::pullBrowserRequest,
     )
 }
 
@@ -148,6 +150,7 @@ private fun ServicesScreen(
     onDisablePassBannerClick: () -> Unit = {},
     onIncrementHotpCounterClick: (Service) -> Unit = {},
     onRevealClick: (Service) -> Unit = {},
+    onPullBrowserRequest: () -> Unit = {},
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -237,6 +240,9 @@ private fun ServicesScreen(
             }
 
             is ServicesUiEvent.OpenImport -> listener.openBackupImport(it.filePath)
+            is ServicesUiEvent.OpenBrowserRequest -> listener.openBrowserExtRequest(it.request)
+            ServicesUiEvent.NoPendingBrowserRequest -> activity.toastShort(TwLocale.strings.browserPullRequestEmpty)
+            ServicesUiEvent.BrowserRequestPullFailed -> activity.toastShort(TwLocale.strings.browserPullRequestFailed)
         }
 
         onEventConsumed(it)
@@ -311,6 +317,9 @@ private fun ServicesScreen(
                 isVisible = uiState.isLoading.not(),
                 isExtendedVisible = uiState.totalServices == 0,
                 isNormalVisible = reorderableState.listState.isScrollingUp(),
+                showBrowserRequestPull = uiState.showBrowserRequestPull,
+                browserRequestPulling = uiState.browserRequestPulling,
+                onBrowserRequestPull = onPullBrowserRequest,
                 onClick = {
                     onSearchFocusChange(false)
                     listener.openAddServiceModal()

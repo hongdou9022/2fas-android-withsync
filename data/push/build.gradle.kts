@@ -10,6 +10,7 @@ android {
 
 dependencies {
     implementation(project(":core:common"))
+    implementation(project(":data:browserext"))
 
     implementation(libs.kotlinCoroutines)
     implementation(libs.timber)

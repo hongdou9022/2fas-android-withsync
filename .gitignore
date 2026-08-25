@@ -11,6 +11,7 @@ Gemfile.lock
 
 # Built application files
 /*/build/
+/cloudbackup/*/build/
 
 # Crashlytics configuations
 com_crashlytics_export_strings.xml

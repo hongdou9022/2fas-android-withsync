@@ -1,6 +1,7 @@
 package com.twofasapp.ui.main
 
 import android.app.Activity
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,7 +26,11 @@ import com.twofasapp.android.navigation.NavArg
 import com.twofasapp.android.navigation.Screen
 import com.twofasapp.android.navigation.intentFor
 import com.twofasapp.common.ktx.encodeBase64ToString
+import com.twofasapp.cloudbackup.webdav.navigation.WebDavSettingsRoute
 import com.twofasapp.core.design.foundation.modal.ModalBottomSheet
+import com.twofasapp.data.browserext.domain.TokenRequest
+import com.twofasapp.feature.browserext.notification.BrowserExtRequestPayload
+import com.twofasapp.feature.browserext.notification.DomainMatcher
 import com.twofasapp.data.services.domain.RecentlyAddedService
 import com.twofasapp.feature.about.navigation.AboutLicensesRoute
 import com.twofasapp.feature.about.navigation.AboutRoute
@@ -34,11 +39,14 @@ import com.twofasapp.feature.backup.navigation.BackupExportRoute
 import com.twofasapp.feature.backup.navigation.BackupImportRoute
 import com.twofasapp.feature.backup.navigation.BackupRoute
 import com.twofasapp.feature.backup.navigation.BackupSettingsRoute
+import com.twofasapp.feature.backup.navigation.CloudBackupFilesRoute
+import com.twofasapp.feature.backup.navigation.CloudBackupSettingsRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtDetailsRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtPairingRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtPermissionRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtScanRoute
+import com.twofasapp.feature.browserext.ui.request.BrowserExtRequestActivity
 import com.twofasapp.feature.externalimport.domain.ImportType
 import com.twofasapp.feature.externalimport.navigation.ExternalImportResultRoute
 import com.twofasapp.feature.externalimport.navigation.ExternalImportRoute
@@ -124,6 +132,25 @@ internal fun MainNavHost(
 
                     override fun openBrowserExt() {
                         navController.navigate(Screen.BrowserExt.route)
+                    }
+
+                    override fun openBrowserExtRequest(request: TokenRequest) {
+                        context.startActivity(
+                            Intent(context, BrowserExtRequestActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                putExtra(
+                                    BrowserExtRequestPayload.Key,
+                                    BrowserExtRequestPayload(
+                                        action = BrowserExtRequestPayload.Action.Approve,
+                                        notificationId = -1,
+                                        extensionId = request.extensionId,
+                                        requestId = request.requestId,
+                                        serviceId = -1,
+                                        domain = DomainMatcher.extractDomain(request.domain),
+                                    ),
+                                )
+                            },
+                        )
                     }
 
                     override fun openSecurity(activity: Activity) {
@@ -217,6 +244,7 @@ internal fun MainNavHost(
             composable(Screen.Backup.route, listOf(NavArg.TurnOnBackup)) {
                 BackupRoute(
                     openSettings = { navController.navigate(Screen.BackupSettings.route) },
+                    openCloudBackup = { navController.navigate(Screen.CloudBackupSettings.route) },
                     openExport = { navController.navigate(Screen.BackupExport.route) },
                     openImport = { navController.navigate(Screen.BackupImport.routeWithArgs()) },
                     goBack = { navController.popBackStack() },
@@ -239,6 +267,29 @@ internal fun MainNavHost(
                 BackupImportRoute(
                     goBack = { navController.popBackStack() },
                 )
+            }
+
+            composable(Screen.CloudBackupSettings.route) {
+                CloudBackupSettingsRoute(
+                    openProviderSettings = { providerId ->
+                        if (providerId.value == "webdav") {
+                            navController.navigate(Screen.WebDavSettings.route)
+                        }
+                    },
+                    openProviderBackups = { providerId ->
+                        navController.navigate(
+                            Screen.CloudBackupFiles.routeWithArgs(NavArg.CloudBackupProviderId to providerId.value),
+                        )
+                    },
+                )
+            }
+
+            composable(Screen.CloudBackupFiles.route, listOf(NavArg.CloudBackupProviderId)) {
+                CloudBackupFilesRoute()
+            }
+
+            composable(Screen.WebDavSettings.route) {
+                WebDavSettingsRoute()
             }
 
             composable(Screen.BrowserExt.route) {

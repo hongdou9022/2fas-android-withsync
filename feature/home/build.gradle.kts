@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":core:locale"))
     implementation(project(":core:designsystem"))
 
+    implementation(project(":data:browserext"))
     implementation(project(":data:notifications"))
     implementation(project(":data:services"))
     implementation(project(":data:session"))

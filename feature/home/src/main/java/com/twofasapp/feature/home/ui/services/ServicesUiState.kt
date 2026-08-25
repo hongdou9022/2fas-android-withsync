@@ -1,6 +1,7 @@
 package com.twofasapp.feature.home.ui.services
 
 import com.twofasapp.common.domain.Service
+import com.twofasapp.data.browserext.domain.TokenRequest
 import com.twofasapp.data.services.domain.Group
 import com.twofasapp.data.session.domain.AppSettings
 
@@ -18,6 +19,8 @@ data class ServicesUiState(
     val showAppReview: Boolean = false,
     val showPassBanner: Boolean = false,
     val hasUnreadNotifications: Boolean = false,
+    val showBrowserRequestPull: Boolean = false,
+    val browserRequestPulling: Boolean = false,
     val appSettings: AppSettings = AppSettings(),
     val events: List<ServicesUiEvent> = listOf(),
     val items: List<ServicesListItem> = mutableListOf(),
@@ -31,4 +34,7 @@ sealed interface ServicesUiEvent {
     data object ShowQrFromGalleryDialog : ServicesUiEvent
     data class ServiceAdded(val id: Long) : ServicesUiEvent
     data class OpenImport(val filePath: String) : ServicesUiEvent
+    data class OpenBrowserRequest(val request: TokenRequest) : ServicesUiEvent
+    data object NoPendingBrowserRequest : ServicesUiEvent
+    data object BrowserRequestPullFailed : ServicesUiEvent
 }

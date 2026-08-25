@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":cloudbackup:api"))
     implementation(project(":core:common"))
     implementation(project(":core:storage"))
     implementation(project(":core:otp"))

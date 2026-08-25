@@ -6,11 +6,16 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.twofasapp.base.AuthTracker
+import com.twofasapp.data.browserext.BrowserExtRepository
 import com.twofasapp.data.services.domain.CloudSyncTrigger
 import com.twofasapp.data.services.remote.CloudSyncWorkDispatcher
 import com.twofasapp.di.Modules
 import com.twofasapp.parsers.SupportedServices
 import com.twofasapp.prefs.usecase.SendCrashLogsPreference
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -19,8 +24,10 @@ import timber.log.Timber
 class App : Application() {
 
     private val authTracker: AuthTracker by inject()
+    private val browserExtRepository: BrowserExtRepository by inject()
     private val cloudSyncWorkDispatcher: CloudSyncWorkDispatcher by inject()
     private val sendCrashLogsPreference: SendCrashLogsPreference by inject()
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
@@ -43,6 +50,11 @@ class App : Application() {
         }
 
         authTracker.onAppCreate()
+
+        applicationScope.launch {
+            runCatching { browserExtRepository.refreshFcmToken() }
+                .onFailure { Timber.w(it, "FCM token refresh unavailable") }
+        }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {

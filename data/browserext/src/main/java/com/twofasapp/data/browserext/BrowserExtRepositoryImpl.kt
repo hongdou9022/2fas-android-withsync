@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import java.security.KeyFactory
 import java.security.spec.MGF1ParameterSpec
@@ -33,6 +34,7 @@ internal class BrowserExtRepositoryImpl(
 
     companion object {
         private const val PLATFORM = "android"
+        private const val FCM_TOKEN_TIMEOUT_MS = 15_000L
     }
 
     override fun observeMobileDevice(): Flow<MobileDevice> {
@@ -44,8 +46,27 @@ internal class BrowserExtRepositoryImpl(
     }
 
     override suspend fun updateMobileDevice(mobileDevice: MobileDevice) {
-        remoteSource.updateMobileDevice(mobileDevice.id, mobileDevice.name)
+        remoteSource.updateMobileDevice(mobileDevice)
         localSource.saveMobileDevice(mobileDevice)
+    }
+
+    override suspend fun refreshFcmToken() {
+        try {
+            updateFcmToken(getFcmToken())
+            localSource.saveFcmSyncStatus("success")
+        } catch (e: Exception) {
+            localSource.saveFcmSyncStatus("${e.javaClass.name}: ${e.message.orEmpty()}")
+            throw e
+        }
+    }
+
+    override suspend fun updateFcmToken(fcmToken: String) {
+        check(fcmToken.isNotBlank()) { "FCM token is empty" }
+
+        val mobileDevice = localSource.observeMobileDevice().first()
+        if (mobileDevice.id.isBlank() || mobileDevice.fcmToken == fcmToken) return
+
+        updateMobileDevice(mobileDevice.copy(fcmToken = fcmToken))
     }
 
     override suspend fun registerMobileDevice(deviceName: String, devicePublicKey: String, fcmToken: String): MobileDevice {
@@ -103,23 +124,32 @@ internal class BrowserExtRepositoryImpl(
     }
 
     override suspend fun fetchTokenRequests() {
+        localSource.updateTokenRequests(pullTokenRequests())
+    }
+
+    override suspend fun pullTokenRequests(): List<TokenRequest> {
         return withContext(dispatchers.io) {
             val deviceId = observeMobileDevice().firstOrNull()?.id
+            if (deviceId.isNullOrBlank()) {
+                localSource.saveRequestFetchStatus("no_device")
+                return@withContext emptyList()
+            }
 
-            if (deviceId.isNullOrBlank().not()) {
-                localSource.updateTokenRequests(
-                    remoteSource.fetchTokenRequests(deviceId!!).map { it.asDomain() },
-                )
+            try {
+                remoteSource.fetchTokenRequests(deviceId)
+                    .map { it.asDomain() }
+                    .also { localSource.saveRequestFetchStatus("success:${it.size}") }
+            } catch (e: Exception) {
+                localSource.saveRequestFetchStatus("error:${e.javaClass.name}")
+                throw e
             }
         }
     }
 
     override suspend fun getFcmToken(): String {
-        return try {
-            FirebaseMessaging.getInstance().token.await().orEmpty()
-        } catch (e: Exception) {
-            ""
-        }
+        return withTimeoutOrNull(FCM_TOKEN_TIMEOUT_MS) {
+            FirebaseMessaging.getInstance().token.await()
+        }.orEmpty()
     }
 
     override suspend fun deleteTokenRequest(requestId: String) {

@@ -1,6 +1,8 @@
 package com.twofasapp.di
 
 import com.twofasapp.cipher.di.CipherModule
+import com.twofasapp.cloudbackup.core.di.CloudBackupCoreModule
+import com.twofasapp.cloudbackup.webdav.di.WebDavCloudBackupModule
 import com.twofasapp.common.di.CommonModule
 import com.twofasapp.data.browserext.di.DataBrowserExtModule
 import com.twofasapp.data.cloud.di.CloudModule
@@ -36,6 +38,8 @@ object Modules {
         PrefsModule(),
         CipherModule(),
         CloudModule(),
+        WebDavCloudBackupModule(),
+        CloudBackupCoreModule(),
         StorageModule(),
     )
 

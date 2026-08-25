@@ -17,7 +17,6 @@ import com.twofasapp.data.session.SessionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 
 internal class BackupViewModel(
@@ -156,9 +155,7 @@ internal class BackupViewModel(
                     backupRepository.setCloudSyncActive(signInResult.email)
                     backupRepository.dispatchCloudSync(
                         trigger = CloudSyncTrigger.FirstConnect,
-                        password = backupRepository.observePasswordForCloudSync().first(),
                     )
-                    backupRepository.setPasswordForCloudSync(null)
                 }
 
                 is SignInResult.Canceled -> {

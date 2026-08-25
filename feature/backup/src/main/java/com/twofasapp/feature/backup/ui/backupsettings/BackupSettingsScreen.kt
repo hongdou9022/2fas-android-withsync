@@ -91,7 +91,7 @@ private fun BackupSettingsScreenContent(
         LazyColumn(
             modifier = Modifier.padding(padding),
         ) {
-            if (uiState.encrypted || uiState.pass.isNullOrBlank().not()) {
+            if (uiState.encrypted || uiState.passwordSet) {
                 item {
                     SettingsLink(
                         title = strings.backupSettingsRemovePasswordTitle,

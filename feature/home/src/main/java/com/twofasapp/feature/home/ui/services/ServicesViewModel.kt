@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.twofasapp.android.navigation.DeeplinkHandler
 import com.twofasapp.common.domain.Service
 import com.twofasapp.common.ktx.launchScoped
+import com.twofasapp.data.browserext.BrowserExtRepository
 import com.twofasapp.data.notifications.NotificationsRepository
 import com.twofasapp.data.services.BackupRepository
 import com.twofasapp.data.services.GroupsRepository
@@ -29,6 +30,7 @@ internal class ServicesViewModel(
     private val settingsRepository: SettingsRepository,
     private val sessionRepository: SessionRepository,
     private val notificationsRepository: NotificationsRepository,
+    private val browserExtRepository: BrowserExtRepository,
     private val backupRepository: BackupRepository,
     private val deeplinkHandler: DeeplinkHandler,
 ) : ViewModel() {
@@ -168,6 +170,12 @@ internal class ServicesViewModel(
         }
 
         launchScoped {
+            browserExtRepository.observeMobileDevice().collect { device ->
+                uiState.update { it.copy(showBrowserRequestPull = device.id.isNotBlank()) }
+            }
+        }
+
+        launchScoped {
             deeplinkHandler.observeQueuedDeeplink().collect {
                 handleIncomingData(it)
                 deeplinkHandler.setQueuedDeeplink(null)
@@ -177,6 +185,27 @@ internal class ServicesViewModel(
 
     fun toggleEditMode() {
         isInEditMode.value = isInEditMode.value.not()
+    }
+
+    fun pullBrowserRequest() {
+        if (uiState.value.browserRequestPulling) return
+
+        launchScoped {
+            uiState.update { it.copy(browserRequestPulling = true) }
+            val event = try {
+                browserExtRepository.pullTokenRequests().firstOrNull()
+                    ?.let(ServicesUiEvent::OpenBrowserRequest)
+                    ?: ServicesUiEvent.NoPendingBrowserRequest
+            } catch (_: Exception) {
+                ServicesUiEvent.BrowserRequestPullFailed
+            }
+            uiState.update {
+                it.copy(
+                    browserRequestPulling = false,
+                    events = it.events.plus(event),
+                )
+            }
+        }
     }
 
     fun consumeEvent(event: ServicesUiEvent) {

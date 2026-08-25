@@ -1,5 +1,7 @@
 package com.twofasapp.data.services
 
+import com.twofasapp.cloudbackup.api.CloudBackupScheduler
+import com.twofasapp.cloudbackup.api.CloudBackupTrigger
 import com.twofasapp.common.coroutines.Dispatchers
 import com.twofasapp.common.domain.BackupSyncStatus
 import com.twofasapp.common.domain.OtpAuthLink
@@ -33,6 +35,7 @@ internal class ServicesRepositoryImpl(
     private val local: ServicesLocalSource,
     private val widgetCallbacks: WidgetCallbacks,
     private val cloudSyncWorkDispatcher: CloudSyncWorkDispatcher,
+    private val cloudBackupScheduler: CloudBackupScheduler,
     private val recentlyDeletedPreference: RecentlyDeletedPreference,
     private val remoteBackupStatusPreference: RemoteBackupStatusPreference,
 ) : ServicesRepository {
@@ -100,6 +103,8 @@ internal class ServicesRepositoryImpl(
     override suspend fun deleteService(id: Long) {
         withContext(dispatchers.io) {
             local.deleteService(id)
+
+            cloudBackupScheduler.scheduleBackup(CloudBackupTrigger.ServicesChanged)
 
             if (remoteBackupStatusPreference.get().state == RemoteBackupStatusEntity.State.ACTIVE) {
                 cloudSyncWorkDispatcher.tryDispatch(CloudSyncTrigger.ServicesChanged)
@@ -171,6 +176,10 @@ internal class ServicesRepositoryImpl(
                     cloudSyncWorkDispatcher.tryDispatch(trigger = CloudSyncTrigger.ServicesChanged)
                 }
             }
+
+            if (triggerSync) {
+                cloudBackupScheduler.scheduleBackup(CloudBackupTrigger.ServicesChanged)
+            }
         }
     }
 
@@ -194,6 +203,8 @@ internal class ServicesRepositoryImpl(
             if (remoteBackupStatusPreference.get().state == RemoteBackupStatusEntity.State.ACTIVE) {
                 cloudSyncWorkDispatcher.tryDispatch(CloudSyncTrigger.ServicesChanged)
             }
+
+            cloudBackupScheduler.scheduleBackup(CloudBackupTrigger.ServicesChanged)
         }
     }
 
@@ -300,18 +311,22 @@ internal class ServicesRepositoryImpl(
 
             if (triggerSync) {
                 cloudSyncWorkDispatcher.tryDispatch(CloudSyncTrigger.ServicesChanged)
+                cloudBackupScheduler.scheduleBackup(CloudBackupTrigger.ServicesChanged)
             }
 
             id
         }
     }
 
-    override suspend fun addServices(services: List<Service>) {
+    override suspend fun addServices(services: List<Service>, triggerCloudBackup: Boolean) {
         services.forEach { service ->
             addService(service, false)
         }
 
         cloudSyncWorkDispatcher.tryDispatch(CloudSyncTrigger.ServicesChanged)
+        if (triggerCloudBackup) {
+            cloudBackupScheduler.scheduleBackup(CloudBackupTrigger.ServicesChanged)
+        }
     }
 
     override fun observeAddServiceAdvancedExpanded(): Flow<Boolean> {
