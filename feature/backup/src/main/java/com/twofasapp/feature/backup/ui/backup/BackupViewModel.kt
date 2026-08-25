@@ -39,6 +39,12 @@ internal class BackupViewModel(
         }
 
         launchScoped {
+            backupRepository.observeBackupPasswordSet().collect { passwordSet ->
+                uiState.update { it.copy(passwordSet = passwordSet) }
+            }
+        }
+
+        launchScoped {
             combine(
                 backupRepository.observeCloudBackupStatus(),
                 backupRepository.observeCloudSyncStatus(),
@@ -145,6 +151,37 @@ internal class BackupViewModel(
             } else {
                 publishEvent(BackupUiEvent.ShowPasswordDialogError)
             }
+        }
+    }
+
+    fun setBackupPassword(password: String) {
+        launchScoped {
+            backupRepository.setBackupPassword(password)
+            if (uiState.value.cloudBackupStatus?.active == true) {
+                backupRepository.dispatchCloudSync(CloudSyncTrigger.SetPassword, password)
+            }
+        }
+    }
+
+    fun removeBackupPassword(password: String) {
+        launchScoped {
+            val cloudBackupStatus = uiState.value.cloudBackupStatus
+            val isCorrect = if (cloudBackupStatus?.active == true && cloudBackupStatus.encrypted) {
+                backupRepository.checkCloudBackupPassword(password)
+            } else {
+                backupRepository.checkBackupPassword(password)
+            }
+
+            if (isCorrect.not()) {
+                publishEvent(BackupUiEvent.ShowRemoveBackupPasswordDialogError)
+                return@launchScoped
+            }
+
+            backupRepository.setBackupPassword(null)
+            if (cloudBackupStatus?.active == true) {
+                backupRepository.dispatchCloudSync(CloudSyncTrigger.RemovePassword, password)
+            }
+            publishEvent(BackupUiEvent.BackupPasswordRemoved)
         }
     }
 

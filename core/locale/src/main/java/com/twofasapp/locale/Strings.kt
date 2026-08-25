@@ -290,6 +290,7 @@ class Strings(c: Context) {
     val backupTitle = c.getString(R.string.backup__2fas_backup)
     val backupDriveHeader = "Google Drive"
     val backupLocalHeader = c.getString(R.string.backup__file_backup)
+    val backupSecurityHeader = c.getString(R.string.backup_security_header)
     val backupDebugHeader = "Debug"
     val backupSync = c.getString(R.string.backup__drive_title)
     val backupSyncDescription = c.getString(R.string.backup_explanation_msg)
@@ -314,6 +315,8 @@ class Strings(c: Context) {
     val backupSettingsDeleteBackupMsg = c.getString(R.string.backup_settings_delete_subtitle)
     val backupSettingsAccountTitle = c.getString(R.string.backup_settings_account_title)
     val backupSettingsSyncTitle = c.getString(R.string.backup_settings_sync_title)
+    val backupSettingsInactiveTitle = c.getString(R.string.backup_settings_inactive_title)
+    val backupSettingsInactiveMessage = c.getString(R.string.backup_settings_inactive_message)
     val backupSyncStatusWaiting = c.getString(R.string.backup__sync_status_waiting)
     val backupSyncStatusSyncing = c.getString(R.string.backup__sync_status_progress)
     val backupSyncStatusError = c.getString(R.string.commons__error)
@@ -327,6 +330,7 @@ class Strings(c: Context) {
     val backupSetCloudPasswordMsg = c.getString(R.string.backup_password_set_dialog)
     val backupRemoveCloudPasswordTitle = c.getString(R.string.backup__enter_password_dialog_title)
     val backupRemoveCloudPasswordMsg = c.getString(R.string.backup_password_remove_dialog)
+    val backupPasswordRemoved = c.getString(R.string.backup_password_removed)
     val backupEnterCloudPasswordTitle = c.getString(R.string.backup__enter_password_dialog_title)
     val backupEnterCloudPasswordMsg1 = c.getString(R.string.backup__enter_password_google_drive_msg1)
     val backupEnterCloudPasswordMsg2 = c.getString(R.string.backup__enter_password_google_drive_msg2)
@@ -337,8 +341,6 @@ class Strings(c: Context) {
     val backupExportHeader = c.getString(R.string.export_backup_title)
     val backupExportMsg = c.getString(R.string.export_backup_msg)
     val backupExportPassMsg = c.getString(R.string.backup__backup_file_password_title)
-    val backupExportSharedPasswordOn = c.getString(R.string.backup_export_shared_password_on)
-    val backupExportSharedPasswordOff = c.getString(R.string.backup_export_shared_password_off)
 
     val cloudBackupHeader = c.getString(R.string.cloud_backup_header)
     val cloudBackupEntryTitle = c.getString(R.string.cloud_backup_entry_title)

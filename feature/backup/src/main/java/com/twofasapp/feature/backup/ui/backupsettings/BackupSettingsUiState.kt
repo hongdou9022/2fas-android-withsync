@@ -9,11 +9,9 @@ internal data class BackupSettingsUiState(
     val account: String = "",
     val lastSyncMillis: Long = 0L,
     val events: List<BackupSettingsUiEvent> = emptyList(),
-    val passwordSet: Boolean = false,
 )
 
 internal sealed interface BackupSettingsUiEvent {
     data object Finish : BackupSettingsUiEvent
     data object ShowWipePasswordDialogError : BackupSettingsUiEvent
-    data object ShowRemovePasswordDialogError : BackupSettingsUiEvent
 }

@@ -35,6 +35,7 @@ import com.twofasapp.core.design.feature.settings.SettingsDivider
 import com.twofasapp.core.design.feature.settings.SettingsHeader
 import com.twofasapp.core.design.feature.settings.SettingsLink
 import com.twofasapp.core.design.foundation.checked.Switch
+import com.twofasapp.core.design.foundation.dialog.ExportPasswordRegex
 import com.twofasapp.core.design.foundation.dialog.InfoDialog
 import com.twofasapp.core.design.foundation.dialog.PasswordDialog
 import com.twofasapp.core.design.foundation.topbar.TopAppBar
@@ -42,7 +43,9 @@ import com.twofasapp.core.design.ktx.currentActivity
 import com.twofasapp.core.design.ktx.openSafely
 import com.twofasapp.core.design.ktx.strings
 import com.twofasapp.core.design.ktx.toastLong
+import com.twofasapp.core.design.ktx.toastShort
 import com.twofasapp.data.services.domain.CloudSyncError
+import com.twofasapp.data.services.domain.CloudSyncStatus
 import com.twofasapp.locale.R
 import org.koin.androidx.compose.koinViewModel
 
@@ -62,6 +65,8 @@ internal fun BackupScreen(
         onTurnOnSync = { viewModel.turnOnSync() },
         onTurnOffSync = { viewModel.turnOffSync() },
         onEnterPassword = { viewModel.enterPassword(it) },
+        onSetBackupPassword = { viewModel.setBackupPassword(it) },
+        onRemoveBackupPassword = { viewModel.removeBackupPassword(it) },
         onSettingsClick = openSettings,
         onCloudBackupClick = openCloudBackup,
         onExportClick = openExport,
@@ -78,6 +83,8 @@ private fun ScreenContent(
     onTurnOnSync: () -> Unit = {},
     onTurnOffSync: () -> Unit = {},
     onEnterPassword: (String) -> Unit = {},
+    onSetBackupPassword: (String) -> Unit = {},
+    onRemoveBackupPassword: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onCloudBackupClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
@@ -91,6 +98,9 @@ private fun ScreenContent(
     val uriHandler = LocalUriHandler.current
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showPasswordError by remember { mutableStateOf(false) }
+    var showSetBackupPasswordDialog by remember { mutableStateOf(false) }
+    var showRemoveBackupPasswordDialog by remember { mutableStateOf(false) }
+    var showRemoveBackupPasswordError by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorDialogTitle by remember { mutableStateOf("") }
     var errorDialogMsg by remember { mutableStateOf("") }
@@ -128,6 +138,15 @@ private fun ScreenContent(
                 }
 
                 is BackupUiEvent.ShowPasswordDialog -> showPasswordDialog = true
+                is BackupUiEvent.ShowRemoveBackupPasswordDialogError -> {
+                    showRemoveBackupPasswordDialog = true
+                    showRemoveBackupPasswordError = true
+                }
+                is BackupUiEvent.BackupPasswordRemoved -> {
+                    showRemoveBackupPasswordDialog = false
+                    showRemoveBackupPasswordError = false
+                    context.toastShort(strings.backupPasswordRemoved)
+                }
                 is BackupUiEvent.FinishSuccess -> {
                     context.toastLong(R.string.introduction__backup_success)
                     goBack()
@@ -208,6 +227,32 @@ private fun ScreenContent(
 
             item { SettingsDivider() }
 
+            item { SettingsHeader(title = strings.backupSecurityHeader) }
+
+            if (uiState.passwordSet) {
+                item {
+                    SettingsLink(
+                        title = strings.backupSettingsRemovePasswordTitle,
+                        subtitle = strings.backupSettingsRemovePasswordMsg,
+                        icon = MdtIcons.LockOpen,
+                        enabled = uiState.cloudSyncStatus != CloudSyncStatus.Syncing,
+                        onClick = { showRemoveBackupPasswordDialog = true },
+                    )
+                }
+            } else {
+                item {
+                    SettingsLink(
+                        title = strings.backupSettingsSetPasswordTitle,
+                        subtitle = strings.backupSettingsSetPasswordMsg,
+                        icon = MdtIcons.Lock,
+                        enabled = uiState.cloudSyncStatus != CloudSyncStatus.Syncing,
+                        onClick = { showSetBackupPasswordDialog = true },
+                    )
+                }
+            }
+
+            item { SettingsDivider() }
+
             item { SettingsHeader(title = strings.cloudBackupHeader) }
 
             item {
@@ -254,6 +299,35 @@ private fun ScreenContent(
                 onDismissRequest = { showErrorDialog = false },
                 title = errorDialogTitle,
                 body = errorDialogMsg,
+            )
+        }
+
+        if (showSetBackupPasswordDialog) {
+            PasswordDialog(
+                onDismissRequest = { showSetBackupPasswordDialog = false },
+                title = strings.backupSetCloudPasswordTitle,
+                body = strings.backupSetCloudPasswordMsg,
+                validation = ExportPasswordRegex::matches,
+                positive = strings.commonContinue,
+                onPositive = {
+                    showSetBackupPasswordDialog = false
+                    onSetBackupPassword(it)
+                },
+            )
+        }
+
+        if (showRemoveBackupPasswordDialog) {
+            PasswordDialog(
+                onDismissRequest = {
+                    showRemoveBackupPasswordDialog = false
+                    showRemoveBackupPasswordError = false
+                },
+                confirmRequired = false,
+                title = strings.backupRemoveCloudPasswordTitle,
+                body = strings.backupRemoveCloudPasswordMsg,
+                positive = strings.commonContinue,
+                error = if (showRemoveBackupPasswordError) strings.backupIncorrectPassword else null,
+                onPositive = { onRemoveBackupPassword(it) },
             )
         }
 

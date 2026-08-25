@@ -8,15 +8,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +35,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.twofasapp.core.design.MdtIcons
 import com.twofasapp.core.design.MdtTheme
 import com.twofasapp.core.design.foundation.button.Button
+import com.twofasapp.core.design.foundation.checked.Switch
+import com.twofasapp.core.design.foundation.dialog.ExportPasswordRegex
+import com.twofasapp.core.design.foundation.dialog.PasswordDialog
 import com.twofasapp.core.design.foundation.topbar.TopAppBar
 import com.twofasapp.core.design.ktx.strings
 import com.twofasapp.core.design.ktx.toastShort
@@ -52,6 +60,8 @@ internal fun BackupExportScreen(
 
     ScreenContent(
         uiState = uiState,
+        onPasswordCheckedChange = viewModel::togglePassword,
+        onPasswordConfirm = viewModel::setPassword,
         onShareClick = { viewModel.shareBackup() },
         onDownloadClick = { launcher.launch(generateFilename()) },
         onEventConsumed = { viewModel.consumeEvent(it) },
@@ -62,6 +72,8 @@ internal fun BackupExportScreen(
 @Composable
 private fun ScreenContent(
     uiState: BackupExportUiState,
+    onPasswordCheckedChange: () -> Unit = {},
+    onPasswordConfirm: (String) -> Unit = {},
     onShareClick: () -> Unit = {},
     onDownloadClick: () -> Unit = {},
     onEventConsumed: (BackupExportUiEvent) -> Unit = {},
@@ -69,6 +81,7 @@ private fun ScreenContent(
 ) {
     val context = LocalContext.current
     val strings = LocalContext.strings
+    var showPasswordDialog by remember { mutableStateOf(false) }
     uiState.events.firstOrNull()?.let { event ->
         LaunchedEffect(Unit) {
             when (event) {
@@ -84,6 +97,7 @@ private fun ScreenContent(
                 }
 
                 BackupExportUiEvent.ShareError -> context.toastShort(strings.backupShareError)
+                BackupExportUiEvent.ShowSetPasswordDialog -> showPasswordDialog = true
             }
         }
 
@@ -126,16 +140,20 @@ private fun ScreenContent(
                     style = MdtTheme.typo.body3,
                 )
 
-                Text(
-                    text = if (uiState.passwordSet) {
-                        TwLocale.strings.backupExportSharedPasswordOn
-                    } else {
-                        TwLocale.strings.backupExportSharedPasswordOff
-                    },
-                    textAlign = TextAlign.Center,
-                    color = MdtTheme.color.onSurfaceSecondary,
-                    style = MdtTheme.typo.body3,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(
+                        checked = uiState.passwordChecked,
+                        onCheckedChange = { onPasswordCheckedChange() },
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = TwLocale.strings.backupExportPassMsg,
+                        color = MdtTheme.color.onSurfacePrimary,
+                        style = MdtTheme.typo.body3,
+                    )
+                }
             }
 
             Row(
@@ -157,6 +175,19 @@ private fun ScreenContent(
                     leadingIconTint = Color.White,
                     modifier = Modifier.weight(1f),
                     onClick = onDownloadClick,
+                )
+            }
+
+            if (showPasswordDialog) {
+                PasswordDialog(
+                    onDismissRequest = { showPasswordDialog = false },
+                    title = TwLocale.strings.backupSetPassword,
+                    body = TwLocale.strings.backupSetPasswordDescription,
+                    validation = ExportPasswordRegex::matches,
+                    onPositive = {
+                        showPasswordDialog = false
+                        onPasswordConfirm(it)
+                    },
                 )
             }
         }

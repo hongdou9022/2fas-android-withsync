@@ -41,6 +41,7 @@ abstract class PreferenceModel<T>(
 
     override fun delete() = preferences.delete(key).also {
         cached = null
+        flow.tryEmit(default)
     }
 
     override fun flow(emitOnSubscribe: Boolean): Flow<T> {

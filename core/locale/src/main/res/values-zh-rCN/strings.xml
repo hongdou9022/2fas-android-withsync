@@ -970,12 +970,14 @@
     <string name="pass_promo_banner_negative_cta">不再显示</string>
     <string name="appearance_dynamic_colors">动态色彩</string>
     <string name="appearance_dynamic_colors_description">根据您的壁纸动态更改应用颜色。</string>
-    <string name="backup_password_set_subtitle">使用同一个密码保护 Google Drive 同步、云备份和本地导出。</string>
+    <string name="backup_security_header">备份加密</string>
+    <string name="backup_password_set_subtitle">使用同一个密码保护 Google Drive 同步、云备份和选择加密的本地导出。</string>
     <string name="backup_password_remove_subtitle">停止加密新生成的 Google Drive、云端和本地备份文件。</string>
     <string name="backup_password_set_dialog">此密码将用于保护 Google Drive 同步、云备份和本地导出，请妥善保管。</string>
     <string name="backup_password_remove_dialog">请输入通用备份密码以移除密码。已有的加密文件仍需使用原密码恢复。</string>
-    <string name="backup_export_shared_password_on">本次导出将使用通用备份密码加密。</string>
-    <string name="backup_export_shared_password_off">尚未设置备份密码，本次导出不会加密。</string>
+    <string name="backup_password_removed">备份密码已移除。</string>
+    <string name="backup_settings_inactive_title">Google Drive 同步尚未开启</string>
+    <string name="backup_settings_inactive_message">开启后，此处将显示同步账户、状态和备份管理选项。</string>
     <string name="cloud_backup_header">云备份</string>
     <string name="cloud_backup_entry_title">云备份</string>
     <string name="cloud_backup_entry_subtitle">在一个或多个云服务中创建带时间戳的备份文件。</string>
