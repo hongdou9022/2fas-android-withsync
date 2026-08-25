@@ -36,37 +36,38 @@ internal class BackupSettingsViewModel(
         }
 
         launchScoped {
-            backupRepository.observePasswordForCloudSync().collect { pass ->
-                uiState.update { it.copy(pass = pass) }
+            backupRepository.observeBackupPasswordSet().collect { passwordSet ->
+                uiState.update { it.copy(passwordSet = passwordSet) }
             }
         }
     }
 
     fun setPassword(password: String) {
-        if (uiState.value.syncActive) {
-            backupRepository.dispatchCloudSync(CloudSyncTrigger.SetPassword, password)
-        } else {
-            backupRepository.setPasswordForCloudSync(password)
+        launchScoped {
+            backupRepository.setBackupPassword(password)
+            if (uiState.value.syncActive) {
+                backupRepository.dispatchCloudSync(CloudSyncTrigger.SetPassword, password)
+            }
         }
     }
 
     fun removePassword(password: String) {
         launchScoped {
-            if (uiState.value.syncActive.not()) {
-                if (password == uiState.value.pass) {
-                    backupRepository.setPasswordForCloudSync(null)
-                } else {
-                    publishEvent(BackupSettingsUiEvent.ShowRemovePasswordDialogError)
-                }
+            val isCorrect = if (uiState.value.syncActive && uiState.value.encrypted) {
+                backupRepository.checkCloudBackupPassword(password)
+            } else {
+                backupRepository.checkBackupPassword(password)
+            }
+
+            if (isCorrect.not()) {
+                publishEvent(BackupSettingsUiEvent.ShowRemovePasswordDialogError)
                 return@launchScoped
             }
 
-            val isCorrect = backupRepository.checkCloudBackupPassword(password)
-
-            if (isCorrect) {
+            if (uiState.value.syncActive) {
                 backupRepository.dispatchCloudSync(CloudSyncTrigger.RemovePassword, password)
             } else {
-                publishEvent(BackupSettingsUiEvent.ShowRemovePasswordDialogError)
+                backupRepository.setBackupPassword(null)
             }
         }
     }

@@ -6,6 +6,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.twofasapp.android.navigation.NavArg
 import com.twofasapp.android.navigation.Screen
+import com.twofasapp.data.browserext.domain.TokenRequest
 import com.twofasapp.feature.home.ui.bottombar.BottomBarListener
 import com.twofasapp.feature.home.ui.editservice.EditServiceScreenRoute
 import com.twofasapp.feature.home.ui.notifications.NotificationsScreen
@@ -73,6 +74,7 @@ interface HomeNavigationListener {
     fun openService(activity: Activity, serviceId: Long)
     fun openExternalImport()
     fun openBrowserExt()
+    fun openBrowserExtRequest(request: TokenRequest)
     fun openSecurity(activity: Activity)
     fun openBackup(turnOnBackup: Boolean)
     fun openAppSettings()

@@ -20,20 +20,18 @@ internal class BackupExportViewModel(
 
     val uiState: MutableStateFlow<BackupExportUiState> = MutableStateFlow(BackupExportUiState())
 
-    fun togglePassword() {
-        uiState.update { it.copy(passwordChecked = it.passwordChecked.not()) }
-    }
-
-    fun updatePassword(password: String) {
-        uiState.update { it.copy(password = password) }
+    init {
+        launchScoped {
+            backupRepository.observeBackupPasswordSet().collect { passwordSet ->
+                uiState.update { it.copy(passwordSet = passwordSet) }
+            }
+        }
     }
 
     fun shareBackup() {
         launchScoped {
             runSafely {
-                backupRepository.createBackupContentSerialized(
-                    password = if (uiState.value.passwordChecked) uiState.value.password else null,
-                )
+                backupRepository.createBackupContentSerializedWithBackupKey()
             }
                 .onSuccess { content ->
                     sessionRepository.resetBackupReminder()
@@ -52,9 +50,7 @@ internal class BackupExportViewModel(
     fun downloadBackup(fileUri: Uri) {
         launchScoped {
             runSafely {
-                val content = backupRepository.createBackupContentSerialized(
-                    password = if (uiState.value.passwordChecked) uiState.value.password else null,
-                )
+                val content = backupRepository.createBackupContentSerializedWithBackupKey()
 
                 context.contentResolver.openOutputStream(fileUri)
                     ?.use { outputStream ->

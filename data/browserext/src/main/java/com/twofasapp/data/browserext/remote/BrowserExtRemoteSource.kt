@@ -39,9 +39,15 @@ internal class BrowserExtRemoteSource(
         )
     }
 
-    suspend fun updateMobileDevice(deviceId: String, newName: String) {
-        client.put("/mobile/devices/$deviceId") {
-            setBody(buildJsonObject { put("name", JsonPrimitive(newName)) })
+    suspend fun updateMobileDevice(mobileDevice: MobileDevice) {
+        client.put("/mobile/devices/${mobileDevice.id}") {
+            setBody(
+                buildJsonObject {
+                    put("name", JsonPrimitive(mobileDevice.name))
+                    put("platform", JsonPrimitive(mobileDevice.platform))
+                    put("fcm_token", JsonPrimitive(mobileDevice.fcmToken))
+                },
+            )
         }.body<Unit>()
     }
 

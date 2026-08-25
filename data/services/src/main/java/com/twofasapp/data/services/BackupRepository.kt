@@ -45,6 +45,11 @@ interface BackupRepository {
     ): String
 
     /**
+     * Create a backup using the shared backup encryption key, when configured.
+     */
+    suspend fun createBackupContentSerializedWithBackupKey(): String
+
+    /**
      * Read BackupContent from a file.
      * @return plain or encrypted content
      * @exception FileTooBigException
@@ -52,6 +57,11 @@ interface BackupRepository {
     suspend fun readBackupContent(
         fileUri: Uri,
     ): BackupContent
+
+    /**
+     * Read BackupContent received from a remote backup container.
+     */
+    suspend fun readBackupContentSerialized(content: String): BackupContent
 
     /**
      * Decrypt BackupContent using password or provided encryption key.
@@ -68,7 +78,7 @@ interface BackupRepository {
      * Import BackupContent into local database.
      * If service/group already exists on local storage it will be skipped.
      */
-    suspend fun import(backupContent: BackupContent)
+    suspend fun import(backupContent: BackupContent, triggerCloudBackup: Boolean = true)
 
     /**
      * Mark cloud sync as active.
@@ -105,6 +115,15 @@ interface BackupRepository {
     suspend fun checkCloudBackupPassword(password: String?): Boolean
 
     /**
+     * Configure the password shared by cloud snapshots, Google Drive sync and local exports.
+     */
+    suspend fun setBackupPassword(password: String?)
+
+    suspend fun checkBackupPassword(password: String): Boolean
+
+    fun observeBackupPasswordSet(): Flow<Boolean>
+
+    /**
      * Observe cloud backup status
      */
     fun observeCloudBackupStatus(): Flow<CloudBackupStatus>
@@ -119,11 +138,4 @@ interface BackupRepository {
      */
     fun publishCloudSyncStatus(status: CloudSyncStatus)
 
-    /**
-     * Set password for cloud sync. The password is used to create local encryption key
-     * and used for cloud sync (once enabled).
-     */
-    fun setPasswordForCloudSync(password: String?)
-
-    fun observePasswordForCloudSync(): Flow<String?>
 }

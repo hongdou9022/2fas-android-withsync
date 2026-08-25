@@ -11,6 +11,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":cloudbackup:api"))
     implementation(project(":core:common"))
     implementation(project(":core:android"))
     implementation(project(":core:locale"))

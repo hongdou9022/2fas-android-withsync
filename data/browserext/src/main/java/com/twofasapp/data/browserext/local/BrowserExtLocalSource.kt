@@ -26,6 +26,8 @@ internal class BrowserExtLocalSource(
 ) {
     companion object {
         private const val KeyMobileDevice = "mobileDevice"
+        private const val KeyFcmSyncStatus = "browserExtFcmSyncStatus"
+        private const val KeyRequestFetchStatus = "browserExtRequestFetchStatus"
     }
 
     private val mobileDeviceFlow: MutableSharedFlow<MobileDevice> = MutableSharedFlow(
@@ -66,6 +68,14 @@ internal class BrowserExtLocalSource(
     suspend fun saveMobileDevice(mobileDevice: MobileDevice) {
         preferences.putString(KeyMobileDevice, json.encodeToString(mobileDevice.asEntity()))
         mobileDeviceFlow.emit(mobileDevice)
+    }
+
+    fun saveFcmSyncStatus(status: String) {
+        preferences.putString(KeyFcmSyncStatus, status)
+    }
+
+    fun saveRequestFetchStatus(status: String) {
+        preferences.putString(KeyRequestFetchStatus, status)
     }
 
     suspend fun savePairedBrowser(pairedBrowser: PairedBrowser) {

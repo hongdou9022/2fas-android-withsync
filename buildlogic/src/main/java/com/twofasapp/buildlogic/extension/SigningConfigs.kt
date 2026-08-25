@@ -14,6 +14,15 @@ internal fun Project.applySigningConfigs(
         val localConfig = Properties().apply {
             load(FileInputStream(File(rootProject.rootDir, "config/config.properties")))
         }
+        val releaseLocalConfig = (providers.gradleProperty("releaseLocalSigningProperties").orNull
+            ?: localConfig.getProperty("releaseLocal.signingProperties"))
+            ?.let(::file)
+            ?.also { check(it.isFile) { "Release signing properties not found: $it" } }
+            ?.let { propertiesFile ->
+                Properties().apply {
+                    propertiesFile.inputStream().use(::load)
+                }
+            }
 
         signingConfigs {
             getByName("debug") {
@@ -29,10 +38,18 @@ internal fun Project.applySigningConfigs(
                 keyPassword = localConfig.getProperty("releaseUpload.keyPassword")
             }
             create("releaseLocal") {
-                storeFile = file("../config/release_signing.jks")
-                storePassword = localConfig.getProperty("release.storePassword")
-                keyAlias = localConfig.getProperty("release.keyAlias")
-                keyPassword = localConfig.getProperty("release.keyPassword")
+                if (releaseLocalConfig == null) {
+                    storeFile = file("../config/release_signing.jks")
+                    storePassword = localConfig.getProperty("release.storePassword")
+                    keyAlias = localConfig.getProperty("release.keyAlias")
+                    keyPassword = localConfig.getProperty("release.keyPassword")
+                } else {
+                    storeFile = file(releaseLocalConfig.getProperty("storeFile"))
+                    storePassword = releaseLocalConfig.getProperty("storePassword")
+                    keyAlias = releaseLocalConfig.getProperty("keyAlias")
+                    keyPassword = releaseLocalConfig.getProperty("keyPassword")
+                    storeType = releaseLocalConfig.getProperty("storeType", "JKS")
+                }
             }
         }
     }

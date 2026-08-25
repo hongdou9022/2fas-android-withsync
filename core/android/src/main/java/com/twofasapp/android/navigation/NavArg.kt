@@ -13,4 +13,5 @@ object NavArg {
     val ImportType = navArgument("ImportType") { type = NavType.StringType }
     val ImportFileUri = navArgument("ImportFileUri") { type = NavType.StringType; nullable = true; defaultValue = null }
     val ImportFileContent = navArgument("ImportFileContent") { type = NavType.StringType; nullable = true; defaultValue = null }
+    val CloudBackupProviderId = navArgument("CloudBackupProviderId") { type = NavType.StringType }
 }

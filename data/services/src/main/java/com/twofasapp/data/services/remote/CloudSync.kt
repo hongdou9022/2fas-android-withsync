@@ -86,14 +86,6 @@ class CloudSync(
             }
 
             is RemoteStatus.Error -> {
-                when (syncBackupStatus.error) {
-                    CloudSyncError.DecryptNoPassword,
-                    CloudSyncError.DecryptWrongPassword,
-                    -> remoteBackupKeyPreference.delete()
-
-                    else -> Unit
-                }
-
                 backupRepository.publishCloudSyncStatus(
                     CloudSyncStatus.Error(
                         error = syncBackupStatus.error,

@@ -3,6 +3,8 @@ package com.twofasapp.feature.backup.di
 import com.twofasapp.common.di.KoinModule
 import com.twofasapp.feature.backup.ui.backup.BackupViewModel
 import com.twofasapp.feature.backup.ui.backupsettings.BackupSettingsViewModel
+import com.twofasapp.feature.backup.ui.cloudbackup.CloudBackupFilesViewModel
+import com.twofasapp.feature.backup.ui.cloudbackup.CloudBackupSettingsViewModel
 import com.twofasapp.feature.backup.ui.export.BackupExportViewModel
 import com.twofasapp.feature.backup.ui.import.BackupImportViewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
@@ -14,5 +16,7 @@ class BackupModule : KoinModule {
         viewModelOf(::BackupSettingsViewModel)
         viewModelOf(::BackupExportViewModel)
         viewModelOf(::BackupImportViewModel)
+        viewModelOf(::CloudBackupSettingsViewModel)
+        viewModelOf(::CloudBackupFilesViewModel)
     }
 }

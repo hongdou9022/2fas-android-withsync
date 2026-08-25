@@ -12,12 +12,15 @@ interface BrowserExtRepository {
     suspend fun getMobileDevice(): MobileDevice
     suspend fun getPairedBrowser(id: String): PairedBrowser
     suspend fun updateMobileDevice(mobileDevice: MobileDevice)
+    suspend fun refreshFcmToken()
+    suspend fun updateFcmToken(fcmToken: String)
     suspend fun registerMobileDevice(deviceName: String, devicePublicKey: String, fcmToken: String): MobileDevice
     suspend fun pairBrowser(deviceId: String, extensionId: String, deviceName: String, devicePublicKey: String): PairedBrowser
     suspend fun updatePairedBrowser(extensionId: String, newName: String)
     suspend fun deletePairedBrowser(deviceId: String, extensionId: String)
     suspend fun fetchPairedBrowsers()
     suspend fun fetchTokenRequests()
+    suspend fun pullTokenRequests(): List<TokenRequest>
     suspend fun deleteTokenRequest(requestId: String)
     suspend fun acceptLoginRequest(
         deviceId: String,

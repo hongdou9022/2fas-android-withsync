@@ -36,6 +36,9 @@ sealed class Screen(val route: String) {
     data object BackupSettings : Screen("backup/settings")
     data object BackupExport : Screen("backup/export")
     data object BackupImport : Screen("backup/import?{${NavArg.ImportFileUri.name}}")
+    data object CloudBackupSettings : Screen("backup/cloud")
+    data object CloudBackupFiles : Screen("backup/cloud/files?providerId={${NavArg.CloudBackupProviderId.name}}")
+    data object WebDavSettings : Screen("backup/cloud/webdav")
 
     data object Security : Screen("security")
     data object SetupPin : Screen("pin/setup")

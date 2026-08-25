@@ -14,7 +14,7 @@ android {
     namespace = "com.twofasapp"
 
     defaultConfig {
-        applicationId = "com.twofasapp"
+        applicationId = "com.cloud.twoasapp"
         versionName = "5.5.3"
         versionCode = 5000034
     }
@@ -37,6 +37,9 @@ androidComponents {
 }
 
 dependencies {
+    implementation(project(":cloudbackup:api"))
+    implementation(project(":cloudbackup:core"))
+    implementation(project(":cloudbackup:webdav"))
     implementation(project(":core:common"))
     implementation(project(":core:android"))
     implementation(project(":core:designsystem"))

@@ -50,6 +50,7 @@ import org.koin.androidx.compose.koinViewModel
 internal fun BackupScreen(
     viewModel: BackupViewModel = koinViewModel(),
     openSettings: () -> Unit,
+    openCloudBackup: () -> Unit,
     openExport: () -> Unit,
     openImport: () -> Unit,
     goBack: () -> Unit,
@@ -62,6 +63,7 @@ internal fun BackupScreen(
         onTurnOffSync = { viewModel.turnOffSync() },
         onEnterPassword = { viewModel.enterPassword(it) },
         onSettingsClick = openSettings,
+        onCloudBackupClick = openCloudBackup,
         onExportClick = openExport,
         onImportClick = openImport,
         onEventConsumed = { viewModel.consumeEvent(it) },
@@ -77,6 +79,7 @@ private fun ScreenContent(
     onTurnOffSync: () -> Unit = {},
     onEnterPassword: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onCloudBackupClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
     onEventConsumed: (BackupUiEvent) -> Unit = {},
@@ -200,6 +203,20 @@ private fun ScreenContent(
                     title = strings.backupSyncSettings,
                     icon = MdtIcons.Settings,
                     onClick = onSettingsClick,
+                )
+            }
+
+            item { SettingsDivider() }
+
+            item { SettingsHeader(title = strings.cloudBackupHeader) }
+
+            item {
+                SettingsLink(
+                    title = strings.cloudBackupEntryTitle,
+                    subtitle = strings.cloudBackupEntrySubtitle,
+                    icon = MdtIcons.CloudUpload,
+                    alignCenterIcon = false,
+                    onClick = onCloudBackupClick,
                 )
             }
 

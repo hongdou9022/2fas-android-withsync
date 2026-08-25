@@ -31,7 +31,7 @@ interface ServicesRepository {
     fun checkServiceValid(service: Service)
     suspend fun addService(link: OtpAuthLink): Long
     suspend fun addService(service: Service, triggerSync: Boolean = true): Long
-    suspend fun addServices(services: List<Service>)
+    suspend fun addServices(services: List<Service>, triggerCloudBackup: Boolean = true)
     fun observeAddServiceAdvancedExpanded(): Flow<Boolean>
     fun pushAddServiceAdvancedExpanded(expanded: Boolean)
     fun setManualGuideSelectedPrefill(prefill: String?)
