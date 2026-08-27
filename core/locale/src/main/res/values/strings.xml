@@ -985,6 +985,10 @@
     <string name="pass_promo_banner_negative_cta">Don\'t show again</string>
     <string name="appearance_dynamic_colors">Dynamic Colors</string>
     <string name="appearance_dynamic_colors_description">Dynamically change the app colors based on your wallpaper.</string>
+    <string name="appearance_custom_colors">Custom colors</string>
+    <string name="appearance_custom_colors_description">Use a color you choose as the app accent.</string>
+    <string name="appearance_custom_color">Theme color</string>
+    <string name="appearance_custom_color_description">Choose the app accent from a color palette.</string>
     <string name="backup_security_header">Backup encryption</string>
     <string name="backup_password_set_subtitle">Use one password to protect Google Drive sync, cloud backups, and encrypted local exports.</string>
     <string name="backup_password_remove_subtitle">Stop encrypting new Google Drive, cloud, and local backup files.</string>

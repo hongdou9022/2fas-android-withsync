@@ -14,4 +14,8 @@ data class AppSettings(
     val servicesSort: ServicesSort = ServicesSort.Manual,
     val hideCodes: Boolean = false,
     val dynamicColors: Boolean = false,
+    val customColors: Boolean = false,
+    val customColor: Long = DefaultCustomColor,
 )
+
+const val DefaultCustomColor = 0xFFED1C24L

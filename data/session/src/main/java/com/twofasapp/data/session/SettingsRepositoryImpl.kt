@@ -88,4 +88,16 @@ internal class SettingsRepositoryImpl(
             local.setDynamicColors(dynamicColors)
         }
     }
+
+    override suspend fun setCustomColors(customColors: Boolean) {
+        withContext(dispatchers.io) {
+            local.setCustomColors(customColors)
+        }
+    }
+
+    override suspend fun setCustomColor(customColor: Long) {
+        withContext(dispatchers.io) {
+            local.setCustomColor(customColor)
+        }
+    }
 }

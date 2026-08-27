@@ -4,9 +4,15 @@ import android.app.Activity
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.lifecycleScope
 import com.twofasapp.base.AuthTracker
+import com.twofasapp.common.domain.SelectedTheme
+import com.twofasapp.core.design.AppTheme
 import com.twofasapp.core.design.AppThemeState
+import com.twofasapp.core.design.LocalAppTheme
+import com.twofasapp.core.design.LocalCustomColor
+import com.twofasapp.core.design.LocalDynamicColors
 import com.twofasapp.core.design.MainAppTheme
 import com.twofasapp.core.design.ktx.makeWindowSecure
 import com.twofasapp.data.session.SettingsRepository
@@ -19,7 +25,8 @@ class LockActivity : AppCompatActivity() {
     private val settingsRepository: SettingsRepository by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppThemeState.applyTheme(settingsRepository.getAppSettings().selectedTheme)
+        val appSettings = settingsRepository.getAppSettings()
+        AppThemeState.applyTheme(appSettings.selectedTheme)
 
         overridePendingTransition(0, 0)
         super.onCreate(savedInstanceState)
@@ -30,10 +37,20 @@ class LockActivity : AppCompatActivity() {
         }
 
         setContent {
-            MainAppTheme {
-                LockScreen {
-                    authTracker.onAuthenticated()
-                    finishWithSuccess()
+            CompositionLocalProvider(
+                LocalAppTheme provides when (appSettings.selectedTheme) {
+                    SelectedTheme.Auto -> AppTheme.Auto
+                    SelectedTheme.Light -> AppTheme.Light
+                    SelectedTheme.Dark -> AppTheme.Dark
+                },
+                LocalCustomColor provides appSettings.customColor.takeIf { appSettings.customColors },
+                LocalDynamicColors provides appSettings.dynamicColors,
+            ) {
+                MainAppTheme {
+                    LockScreen {
+                        authTracker.onAuthenticated()
+                        finishWithSuccess()
+                    }
                 }
             }
         }
