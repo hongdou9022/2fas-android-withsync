@@ -995,8 +995,6 @@
     <string name="cloud_backup_options">备份选项</string>
     <string name="cloud_backup_max_count">最多保留数量</string>
     <string name="cloud_backup_max_count_description">超过此数量后，会先删除最旧的带时间戳备份。</string>
-    <string name="cloud_backup_history">记录备份历史</string>
-    <string name="cloud_backup_history_description">在云端历史文档中记录每次备份相对上次备份的令牌和分组变化。</string>
     <string name="cloud_backup_now">立即备份</string>
     <string name="cloud_backup_now_description">立即在所有已启用的服务中创建备份。</string>
     <string name="cloud_backup_no_provider">请先配置并启用至少一个备份服务。</string>
@@ -1015,7 +1013,7 @@
     <string name="cloud_backup_restore_password_wrong">密码不正确。</string>
     <string name="cloud_backup_delete">删除备份</string>
     <string name="cloud_backup_delete_title">删除此备份？</string>
-    <string name="cloud_backup_delete_message">此操作会同时移除对应的历史记录，且无法撤销。</string>
+    <string name="cloud_backup_delete_message">此操作无法撤销。</string>
     <string name="cloud_backup_delete_success">备份已删除。</string>
     <string name="cloud_backup_delete_failed">无法删除备份。</string>
     <string name="webdav_title">WebDAV</string>

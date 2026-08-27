@@ -1005,8 +1005,6 @@
     <string name="cloud_backup_options">Backup options</string>
     <string name="cloud_backup_max_count">Maximum backups</string>
     <string name="cloud_backup_max_count_description">Oldest timestamped backups are removed after this limit is exceeded.</string>
-    <string name="cloud_backup_history">Record backup history</string>
-    <string name="cloud_backup_history_description">Record token and group changes since the previous backup in a cloud history document.</string>
     <string name="cloud_backup_now">Back up now</string>
     <string name="cloud_backup_now_description">Immediately create a backup in every enabled service.</string>
     <string name="cloud_backup_no_provider">Enable at least one configured backup service first.</string>
@@ -1025,7 +1023,7 @@
     <string name="cloud_backup_restore_password_wrong">That password is incorrect.</string>
     <string name="cloud_backup_delete">Delete backup</string>
     <string name="cloud_backup_delete_title">Delete this backup?</string>
-    <string name="cloud_backup_delete_message">The matching history entry will also be removed. This action cannot be undone.</string>
+    <string name="cloud_backup_delete_message">This action cannot be undone.</string>
     <string name="cloud_backup_delete_success">Backup deleted.</string>
     <string name="cloud_backup_delete_failed">The backup could not be deleted.</string>
     <string name="webdav_title">WebDAV</string>

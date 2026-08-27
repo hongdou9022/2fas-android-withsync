@@ -38,10 +38,8 @@ internal class CloudBackupManagerImpl(
     companion object {
         const val FilePrefix = "2fas-backup-"
         const val FileExtension = ".2fas"
-        const val HistoryFileName = "2fas-backup-history.json"
         private const val MaxFileSize = 100 * 1024 * 1024
         private val FileNameFormatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS")
-        private val HistoryTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
         private val BackupFileRegex = Regex("^2fas-backup-\\d{8}-\\d{6}-\\d{3}\\.2fas$")
     }
 
@@ -59,10 +57,6 @@ internal class CloudBackupManagerImpl(
 
     override fun setMaxBackups(count: Int) = settingsStore.setMaxBackups(count)
 
-    override fun observeHistoryEnabled(): Flow<Boolean> = settingsStore.observeHistoryEnabled()
-
-    override fun setHistoryEnabled(enabled: Boolean) = settingsStore.setHistoryEnabled(enabled)
-
     override suspend fun backupNow(trigger: CloudBackupTrigger): CloudBackupRunResult = backupMutex.withLock {
         val enabledProviders = providers.filter { it.state().configured && it.state().enabled }
         if (enabledProviders.isEmpty()) {
@@ -70,21 +64,12 @@ internal class CloudBackupManagerImpl(
         }
 
         operationState.value = CloudBackupOperationState.Running(trigger)
-        val historyEnabled = settingsStore.isHistoryEnabled()
-        val contentAndSnapshot = try {
-            val content = backupRepository.createBackupContentSerializedWithBackupKey()
-            val snapshot = if (historyEnabled) {
-                CloudBackupSnapshot.from(backupRepository.createBackupContent().backupContent)
-            } else {
-                null
-            }
-            content to snapshot
+        val content = try {
+            backupRepository.createBackupContentSerializedWithBackupKey()
         } catch (e: Exception) {
             return@withLock completeWithFailures(enabledProviders, CloudBackupError.Unknown)
         }
-        val localTime = LocalDateTime.now()
-        val fileName = buildFileName(localTime)
-        val createdAt = localTime.format(HistoryTimeFormatter)
+        val fileName = buildFileName(LocalDateTime.now())
 
         val results = coroutineScope {
             enabledProviders.map { provider ->
@@ -93,10 +78,7 @@ internal class CloudBackupManagerImpl(
                         uploadAndRotate(
                             provider = provider,
                             fileName = fileName,
-                            content = contentAndSnapshot.first,
-                            createdAt = createdAt,
-                            trigger = trigger,
-                            snapshot = contentAndSnapshot.second,
+                            content = content,
                         )
                     } catch (e: Exception) {
                         CloudBackupResult.Failure(CloudBackupError.Provider(e.message))
@@ -134,10 +116,7 @@ internal class CloudBackupManagerImpl(
         val provider = findProvider(file.providerId)
             ?: return@withLock CloudBackupResult.Failure(CloudBackupError.NotConfigured)
 
-        when (val delete = provider.delete(file.remoteId)) {
-            is CloudBackupResult.Failure -> delete
-            is CloudBackupResult.Success -> removeHistoryEntries(provider, setOf(file.name))
-        }
+        provider.delete(file.remoteId)
     }
 
     override suspend fun restore(
@@ -188,9 +167,6 @@ internal class CloudBackupManagerImpl(
         provider: CloudBackupProvider,
         fileName: String,
         content: String,
-        createdAt: String,
-        trigger: CloudBackupTrigger,
-        snapshot: CloudBackupSnapshot?,
     ): CloudBackupResult<Unit> {
         val upload = provider.upload(fileName, content)
         if (upload is CloudBackupResult.Failure) return upload
@@ -209,65 +185,7 @@ internal class CloudBackupManagerImpl(
             if (delete is CloudBackupResult.Failure) return delete
         }
 
-        val deletedNames = oldFiles.mapTo(mutableSetOf()) { it.name }
-        val retainedBackups = listed.value
-            .asSequence()
-            .filter { isBackupFile(it.name) && it.name !in deletedNames }
-            .map { it.name }
-            .toSet()
-
-        if (snapshot != null) {
-            val history = when (val result = readHistory(provider, listed.value)) {
-                is CloudBackupResult.Failure -> return result
-                is CloudBackupResult.Success -> result.value ?: CloudBackupHistoryDocument()
-            }
-            val updated = history.append(
-                fileName = fileName,
-                createdAt = createdAt,
-                trigger = trigger,
-                snapshot = snapshot,
-                retainedBackups = retainedBackups,
-            )
-            return provider.upload(HistoryFileName, CloudBackupHistoryCodec.encode(updated))
-        }
-
-        if (deletedNames.isNotEmpty()) {
-            return removeHistoryEntries(provider, deletedNames, listed.value)
-        }
-
         return CloudBackupResult.Success(Unit)
-    }
-
-    private suspend fun removeHistoryEntries(
-        provider: CloudBackupProvider,
-        fileNames: Set<String>,
-        listedFiles: List<CloudBackupFile>? = null,
-    ): CloudBackupResult<Unit> {
-        val files = listedFiles ?: when (val listed = provider.listBackups()) {
-            is CloudBackupResult.Failure -> return listed
-            is CloudBackupResult.Success -> listed.value
-        }
-        return when (val history = readHistory(provider, files)) {
-            is CloudBackupResult.Failure -> history
-            is CloudBackupResult.Success -> {
-                val document = history.value ?: return CloudBackupResult.Success(Unit)
-                provider.upload(HistoryFileName, CloudBackupHistoryCodec.encode(document.remove(fileNames)))
-            }
-        }
-    }
-
-    private suspend fun readHistory(
-        provider: CloudBackupProvider,
-        listedFiles: List<CloudBackupFile>,
-    ): CloudBackupResult<CloudBackupHistoryDocument?> {
-        val historyFile = listedFiles.firstOrNull { it.name == HistoryFileName }
-            ?: return CloudBackupResult.Success(null)
-        return when (val download = provider.download(historyFile.remoteId)) {
-            is CloudBackupResult.Failure -> download
-            is CloudBackupResult.Success -> CloudBackupResult.Success(
-                runCatching { CloudBackupHistoryCodec.decode(download.value) }.getOrNull(),
-            )
-        }
     }
 
     private fun findProvider(id: CloudBackupProviderId) = providers.firstOrNull { it.id == id }

@@ -12,11 +12,9 @@ internal class CloudBackupSettingsStore(
         const val MinBackups = 1
         const val MaxBackups = 100
         private const val KeyMaxBackups = "cloudBackupMaxBackups"
-        private const val KeyHistoryEnabled = "cloudBackupHistoryEnabled"
     }
 
     private val maxBackups = MutableStateFlow(readMaxBackups())
-    private val historyEnabled = MutableStateFlow(preferences.getBoolean(KeyHistoryEnabled) ?: true)
 
     fun observeMaxBackups(): Flow<Int> = maxBackups
 
@@ -26,15 +24,6 @@ internal class CloudBackupSettingsStore(
         val normalized = count.coerceIn(MinBackups, MaxBackups)
         preferences.putInt(KeyMaxBackups, normalized)
         maxBackups.value = normalized
-    }
-
-    fun observeHistoryEnabled(): Flow<Boolean> = historyEnabled
-
-    fun isHistoryEnabled(): Boolean = historyEnabled.value
-
-    fun setHistoryEnabled(enabled: Boolean) {
-        preferences.putBoolean(KeyHistoryEnabled, enabled)
-        historyEnabled.value = enabled
     }
 
     private fun readMaxBackups(): Int = preferences.getInt(KeyMaxBackups)

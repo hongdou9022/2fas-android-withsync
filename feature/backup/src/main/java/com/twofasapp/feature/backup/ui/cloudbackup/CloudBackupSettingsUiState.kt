@@ -5,7 +5,6 @@ import com.twofasapp.cloudbackup.api.CloudBackupProviderState
 internal data class CloudBackupSettingsUiState(
     val providers: List<CloudBackupProviderState> = emptyList(),
     val maxBackups: Int = 10,
-    val historyEnabled: Boolean = true,
     val running: Boolean = false,
     val events: List<CloudBackupSettingsUiEvent> = emptyList(),
 )

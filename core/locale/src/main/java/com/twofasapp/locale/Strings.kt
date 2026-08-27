@@ -375,8 +375,6 @@ class Strings(c: Context) {
     val cloudBackupOptions = c.getString(R.string.cloud_backup_options)
     val cloudBackupMaxCount = c.getString(R.string.cloud_backup_max_count)
     val cloudBackupMaxCountDescription = c.getString(R.string.cloud_backup_max_count_description)
-    val cloudBackupHistory = c.getString(R.string.cloud_backup_history)
-    val cloudBackupHistoryDescription = c.getString(R.string.cloud_backup_history_description)
     val cloudBackupNow = c.getString(R.string.cloud_backup_now)
     val cloudBackupNowDescription = c.getString(R.string.cloud_backup_now_description)
     val cloudBackupNoProvider = c.getString(R.string.cloud_backup_no_provider)

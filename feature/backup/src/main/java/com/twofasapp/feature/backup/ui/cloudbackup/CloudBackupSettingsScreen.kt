@@ -20,7 +20,6 @@ import com.twofasapp.core.design.MdtIcons
 import com.twofasapp.core.design.feature.settings.SettingsDivider
 import com.twofasapp.core.design.feature.settings.SettingsHeader
 import com.twofasapp.core.design.feature.settings.SettingsLink
-import com.twofasapp.core.design.feature.settings.SettingsSwitch
 import com.twofasapp.core.design.foundation.dialog.InputDialog
 import com.twofasapp.core.design.foundation.progress.CircularProgressIndicator
 import com.twofasapp.core.design.foundation.topbar.TopAppBar
@@ -39,7 +38,6 @@ internal fun CloudBackupSettingsScreen(
     CloudBackupSettingsContent(
         uiState = uiState,
         onSetMaxBackups = viewModel::setMaxBackups,
-        onSetHistoryEnabled = viewModel::setHistoryEnabled,
         onBackupNow = viewModel::backupNow,
         onProviderSettings = openProviderSettings,
         onProviderBackups = openProviderBackups,
@@ -51,7 +49,6 @@ internal fun CloudBackupSettingsScreen(
 private fun CloudBackupSettingsContent(
     uiState: CloudBackupSettingsUiState,
     onSetMaxBackups: (Int) -> Unit = {},
-    onSetHistoryEnabled: (Boolean) -> Unit = {},
     onBackupNow: () -> Unit = {},
     onProviderSettings: (CloudBackupProviderId) -> Unit = {},
     onProviderBackups: (CloudBackupProviderId) -> Unit = {},
@@ -111,17 +108,6 @@ private fun CloudBackupSettingsContent(
                     subtitle = "${strings.cloudBackupMaxCountDescription}\n${uiState.maxBackups}",
                     icon = MdtIcons.Settings,
                     onClick = { showMaxBackupsDialog = true },
-                )
-            }
-
-
-            item {
-                SettingsSwitch(
-                    title = strings.cloudBackupHistory,
-                    subtitle = strings.cloudBackupHistoryDescription,
-                    icon = MdtIcons.Time,
-                    checked = uiState.historyEnabled,
-                    onCheckedChange = onSetHistoryEnabled,
                 )
             }
 
