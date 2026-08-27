@@ -73,6 +73,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -128,6 +129,7 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
+import kotlin.math.ceil
 import com.twofasapp.locale.R as LocaleR
 
 internal sealed interface SelectedGroup {
@@ -167,6 +169,7 @@ internal fun RefreshedServicesScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val hapticFeedback = LocalHapticFeedback.current
+    val density = LocalDensity.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
@@ -489,9 +492,15 @@ internal fun RefreshedServicesScreen(
             onGroupSelected = { group ->
                 val nextGroupKey = group.key()
                 if (selectedGroupKey != nextGroupKey) {
-                    groupAnimationItemCount = listState.layoutInfo.visibleItemsInfo
-                        .count { it.key is Long }
-                        .coerceAtLeast(1)
+                    val serviceItemHeight = if (uiState.appSettings.servicesStyle == ServicesStyle.Compact) {
+                        92.dp
+                    } else {
+                        104.dp
+                    }
+                    val itemPitchPx = with(density) { (serviceItemHeight + 8.dp).toPx() }
+                    groupAnimationItemCount = ceil(
+                        listState.layoutInfo.viewportSize.height / itemPitchPx,
+                    ).toInt().coerceAtLeast(1)
                     groupAnimationActive = true
                     selectedGroupKey = nextGroupKey
                     groupAnimationVersion += 1
