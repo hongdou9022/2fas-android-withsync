@@ -9,6 +9,7 @@ data class AppSettings(
     val sendCrashLogs: Boolean = false,
     val allowScreenshots: Boolean = false,
     val selectedTheme: SelectedTheme = SelectedTheme.Auto,
+    val homeUiMode: HomeUiMode = HomeUiMode.Classic,
     val servicesStyle: ServicesStyle = ServicesStyle.Default,
     val servicesSort: ServicesSort = ServicesSort.Manual,
     val hideCodes: Boolean = false,

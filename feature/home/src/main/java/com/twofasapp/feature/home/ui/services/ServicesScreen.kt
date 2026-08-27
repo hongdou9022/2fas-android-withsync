@@ -59,6 +59,7 @@ import com.twofasapp.core.design.ktx.currentActivity
 import com.twofasapp.core.design.ktx.openSafely
 import com.twofasapp.core.design.ktx.toastShort
 import com.twofasapp.data.services.domain.Group
+import com.twofasapp.data.session.domain.HomeUiMode
 import com.twofasapp.data.session.domain.ServicesSort
 import com.twofasapp.data.session.domain.ServicesStyle
 import com.twofasapp.feature.home.R
@@ -87,44 +88,72 @@ import org.koin.androidx.compose.koinViewModel
 internal fun ServicesRoute(
     listener: HomeNavigationListener,
     bottomBarListener: BottomBarListener,
+    openAuth: (successCallback: () -> Unit) -> Unit,
     viewModel: ServicesViewModel = koinViewModel(),
     appReviewViewModel: AppReviewViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    ServicesScreen(
-        uiState = uiState,
-        listener = listener,
-        bottomBarListener = bottomBarListener,
-        onEventConsumed = { viewModel.consumeEvent(it) },
-        onExternalImportClick = { listener.openExternalImport() },
-        onEditModeChange = { viewModel.toggleEditMode() },
-        onToggleGroupExpand = { viewModel.toggleGroup(it) },
-        onAddGroup = { viewModel.addGroup(it) },
-        onMoveUpGroup = { viewModel.moveUpGroup(it) },
-        onMoveDownGroup = { viewModel.moveDownGroup(it) },
-        onEditGroup = { id, name -> viewModel.editGroup(id, name) },
-        onDeleteGroup = { viewModel.deleteGroup(it) },
-        onDragStart = { viewModel.onDragStart() },
-        onDragEnd = { viewModel.onDragEnd(it) },
-        onSortChange = { viewModel.updateSort(it) },
-        onSearchQueryChange = { viewModel.search(it) },
-        onSearchFocusChange = { viewModel.searchFocused(it) },
-        onOpenBackupClick = { listener.openBackup(it) },
-        onDismissSyncReminderClick = { viewModel.dismissSyncReminder() },
-        onRateAppClick = { appReviewViewModel.rate(it) },
-        onDismissAppReviewClick = { appReviewViewModel.dismiss() },
-        onDismissPassBannerClick = { viewModel.dismissPassBanner() },
-        onDisablePassBannerClick = { viewModel.disablePassBanner() },
-        onIncrementHotpCounterClick = { viewModel.incrementHotpCounter(it) },
-        onRevealClick = { viewModel.reveal(it) },
-        onPullBrowserRequest = viewModel::pullBrowserRequest,
-    )
+    when (uiState.appSettings.homeUiMode) {
+        HomeUiMode.Classic -> ClassicServicesScreen(
+            uiState = uiState,
+            listener = listener,
+            bottomBarListener = bottomBarListener,
+            onEventConsumed = { viewModel.consumeEvent(it) },
+            onExternalImportClick = { listener.openExternalImport() },
+            onEditModeChange = { viewModel.toggleEditMode() },
+            onToggleGroupExpand = { viewModel.toggleGroup(it) },
+            onAddGroup = { viewModel.addGroup(it) },
+            onMoveUpGroup = { viewModel.moveUpGroup(it) },
+            onMoveDownGroup = { viewModel.moveDownGroup(it) },
+            onEditGroup = { id, name -> viewModel.editGroup(id, name) },
+            onDeleteGroup = { viewModel.deleteGroup(it) },
+            onDragStart = { viewModel.onDragStart() },
+            onDragEnd = { viewModel.onDragEnd(it) },
+            onSortChange = { viewModel.updateSort(it) },
+            onSearchQueryChange = { viewModel.search(it) },
+            onSearchFocusChange = { viewModel.searchFocused(it) },
+            onOpenBackupClick = { listener.openBackup(it) },
+            onDismissSyncReminderClick = { viewModel.dismissSyncReminder() },
+            onRateAppClick = { appReviewViewModel.rate(it) },
+            onDismissAppReviewClick = { appReviewViewModel.dismiss() },
+            onDismissPassBannerClick = { viewModel.dismissPassBanner() },
+            onDisablePassBannerClick = { viewModel.disablePassBanner() },
+            onIncrementHotpCounterClick = { viewModel.incrementHotpCounter(it) },
+            onRevealClick = { viewModel.reveal(it) },
+            onPullBrowserRequest = viewModel::pullBrowserRequest,
+        )
+
+        HomeUiMode.Refreshed -> RefreshedServicesScreen(
+            uiState = uiState,
+            listener = listener,
+            bottomBarListener = bottomBarListener,
+            onEventConsumed = viewModel::consumeEvent,
+            onExternalImportClick = listener::openExternalImport,
+            onDragStart = viewModel::onDragStart,
+            onDragEnd = viewModel::onRefreshedDragEnd,
+            onSortChange = viewModel::updateSort,
+            onSearchQueryChange = viewModel::search,
+            onSearchFocusChange = viewModel::searchFocused,
+            onOpenBackupClick = listener::openBackup,
+            onDismissSyncReminderClick = viewModel::dismissSyncReminder,
+            onRateAppClick = appReviewViewModel::rate,
+            onDismissAppReviewClick = appReviewViewModel::dismiss,
+            onDismissPassBannerClick = viewModel::dismissPassBanner,
+            onDisablePassBannerClick = viewModel::disablePassBanner,
+            onIncrementHotpCounterClick = viewModel::incrementHotpCounter,
+            onRevealClick = viewModel::reveal,
+            onPullBrowserRequest = viewModel::pullBrowserRequest,
+            onServiceGroupChange = viewModel::setServiceGroup,
+            onTrashService = viewModel::trashService,
+            onAuthenticate = openAuth,
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ServicesScreen(
+private fun ClassicServicesScreen(
     uiState: ServicesUiState,
     listener: HomeNavigationListener,
     bottomBarListener: BottomBarListener,
@@ -439,7 +468,7 @@ private fun ServicesScreen(
                         listItem(item) {
                             ServicesGroup(
                                 id = group.id,
-                                name = group.name ?: TwLocale.strings.servicesMyTokens,
+                                name = group.name ?: TwLocale.strings.groupsDefault,
                                 count = uiState.services.count { it.groupId == group.id },
                                 expanded = group.isExpanded,
                                 editMode = uiState.isInEditMode,

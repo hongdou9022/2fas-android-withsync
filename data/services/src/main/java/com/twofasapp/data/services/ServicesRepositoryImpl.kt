@@ -138,8 +138,24 @@ internal class ServicesRepositoryImpl(
     }
 
     override suspend fun setServiceGroup(id: Long, groupId: String?) {
+        setServiceGroups(mapOf(id to groupId))
+    }
+
+    override suspend fun setServiceGroups(assignments: Map<Long, String?>) {
+        if (assignments.isEmpty()) return
+
         withContext(dispatchers.io) {
-            local.setServiceGroup(id, groupId)
+            assignments.forEach { (id, groupId) ->
+                local.setServiceGroup(id, groupId)
+            }
+
+            widgetCallbacks.onServiceChanged()
+
+            if (remoteBackupStatusPreference.get().state == RemoteBackupStatusEntity.State.ACTIVE) {
+                cloudSyncWorkDispatcher.tryDispatch(CloudSyncTrigger.ServicesChanged)
+            }
+
+            cloudBackupScheduler.scheduleBackup(CloudBackupTrigger.ServicesChanged)
         }
     }
 

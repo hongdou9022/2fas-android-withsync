@@ -39,7 +39,7 @@ class AppModule : KoinModule {
         factory { androidContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
 
         single { CheckLockStatus(get()) }
-        single { AuthTracker(Provider { get() }) }
+        single { AuthTracker(Provider { get() }, Provider { get() }) }
 
         singleOf(::ShowBrowserExtRequestNotificationImpl) { bind<ShowBrowserExtRequestNotification>() }
 

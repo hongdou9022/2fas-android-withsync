@@ -3,6 +3,7 @@ package com.twofasapp.data.session
 import com.twofasapp.common.coroutines.Dispatchers
 import com.twofasapp.common.domain.SelectedTheme
 import com.twofasapp.data.session.domain.AppSettings
+import com.twofasapp.data.session.domain.HomeUiMode
 import com.twofasapp.data.session.domain.ServicesSort
 import com.twofasapp.data.session.domain.ServicesStyle
 import com.twofasapp.data.session.local.SettingsLocalSource
@@ -31,6 +32,12 @@ internal class SettingsRepositoryImpl(
     override suspend fun setSelectedTheme(selectedTheme: SelectedTheme) {
         withContext(dispatchers.io) {
             local.setSelectedTheme(selectedTheme)
+        }
+    }
+
+    override suspend fun setHomeUiMode(homeUiMode: HomeUiMode) {
+        withContext(dispatchers.io) {
+            local.setHomeUiMode(homeUiMode)
         }
     }
 

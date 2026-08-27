@@ -13,6 +13,7 @@ import com.twofasapp.prefs.usecase.RemoteBackupStatusPreference
 import com.twofasapp.prefs.usecase.SendCrashLogsPreference
 import com.twofasapp.prefs.usecase.ServicesOrderPreference
 import com.twofasapp.prefs.usecase.ShowNextTokenPreference
+import com.twofasapp.prefs.usecase.SkipAppUnlockPreference
 import com.twofasapp.prefs.usecase.TimeDeltaPreference
 import com.twofasapp.prefs.usecase.WidgetSettingsPreference
 import com.twofasapp.storage.PlainPreferences
@@ -35,5 +36,6 @@ class PreferencesPlainModule : KoinModule {
         single { AppUpdateLastCheckVersionPreference(get<PlainPreferences>()) }
         single { CurrentAppVersionPreference(get<PlainPreferences>()) }
         single { SendCrashLogsPreference(get<PlainPreferences>()) }
+        single { SkipAppUnlockPreference(get<PlainPreferences>()) }
     }
 }

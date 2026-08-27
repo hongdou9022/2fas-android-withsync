@@ -20,6 +20,7 @@ import com.twofasapp.core.design.foundation.dialog.ConfirmDialog
 import com.twofasapp.core.design.foundation.dialog.ListRadioDialog
 import com.twofasapp.core.design.foundation.topbar.TopAppBar
 import com.twofasapp.core.design.ktx.currentActivity
+import com.twofasapp.data.session.domain.HomeUiMode
 import com.twofasapp.data.session.domain.ServicesStyle
 import com.twofasapp.locale.R
 import com.twofasapp.locale.TwLocale
@@ -35,6 +36,7 @@ internal fun AppSettingsScreen(
         uiState = uiState,
         onConsumeEvent = { viewModel.consumeEvent(it) },
         onSelectedThemeChange = { viewModel.setSelectedTheme(it) },
+        onHomeUiModeChange = { viewModel.setHomeUiMode(it) },
         onServicesStyleChange = { viewModel.setServiceStyle(it) },
         onShowNextTokenToggle = { viewModel.toggleShowNextToken() },
         onShowBackupNoticeToggle = { viewModel.toggleShowBackupNotice() },
@@ -49,6 +51,7 @@ private fun ScreenContent(
     uiState: AppSettingsUiState,
     onConsumeEvent: (AppSettingsUiEvent) -> Unit,
     onSelectedThemeChange: (SelectedTheme) -> Unit,
+    onHomeUiModeChange: (HomeUiMode) -> Unit,
     onServicesStyleChange: (ServicesStyle) -> Unit,
     onShowNextTokenToggle: () -> Unit,
     onShowBackupNoticeToggle: () -> Unit,
@@ -58,6 +61,7 @@ private fun ScreenContent(
 ) {
     val activity = LocalContext.currentActivity
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showHomeUiModeDialog by remember { mutableStateOf(false) }
     var showServicesStyleDialog by remember { mutableStateOf(false) }
     var showConfirmDisableBackupNotice by remember { mutableStateOf(false) }
 
@@ -74,6 +78,15 @@ private fun ScreenContent(
     ) { padding ->
 
         LazyColumn(Modifier.padding(padding)) {
+            item {
+                SettingsLink(
+                    title = TwLocale.strings.settingsHomeUiMode,
+                    subtitle = uiState.appSettings.homeUiMode.toStringResource(),
+                    icon = MdtIcons.Home,
+                    onClick = { showHomeUiModeDialog = true },
+                )
+            }
+
             item {
                 SettingsLink(
                     title = TwLocale.strings.settingsTheme,
@@ -168,6 +181,16 @@ private fun ScreenContent(
             )
         }
 
+        if (showHomeUiModeDialog) {
+            ListRadioDialog(
+                onDismissRequest = { showHomeUiModeDialog = false },
+                title = TwLocale.strings.settingsHomeUiMode,
+                options = HomeUiMode.values().map { it.toStringResource() },
+                selectedOption = uiState.appSettings.homeUiMode.toStringResource(),
+                onOptionSelected = { index, _ -> onHomeUiModeChange(HomeUiMode.values()[index]) },
+            )
+        }
+
         if (showConfirmDisableBackupNotice) {
             ConfirmDialog(
                 onDismissRequest = { showConfirmDisableBackupNotice = false },
@@ -193,5 +216,13 @@ private fun ServicesStyle.toStringResource(): String {
     return when (this) {
         ServicesStyle.Default -> stringResource(id = R.string.settings__list_style_option_default)
         ServicesStyle.Compact -> stringResource(id = R.string.settings__list_style_option_compact)
+    }
+}
+
+@Composable
+private fun HomeUiMode.toStringResource(): String {
+    return when (this) {
+        HomeUiMode.Classic -> stringResource(id = R.string.settings__home_ui_mode_classic)
+        HomeUiMode.Refreshed -> stringResource(id = R.string.settings__home_ui_mode_refreshed)
     }
 }

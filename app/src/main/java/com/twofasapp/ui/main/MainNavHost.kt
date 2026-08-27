@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,12 +27,10 @@ import com.twofasapp.android.navigation.NavAnimation
 import com.twofasapp.android.navigation.NavArg
 import com.twofasapp.android.navigation.Screen
 import com.twofasapp.android.navigation.intentFor
-import com.twofasapp.common.ktx.encodeBase64ToString
 import com.twofasapp.cloudbackup.webdav.navigation.WebDavSettingsRoute
+import com.twofasapp.common.ktx.encodeBase64ToString
 import com.twofasapp.core.design.foundation.modal.ModalBottomSheet
 import com.twofasapp.data.browserext.domain.TokenRequest
-import com.twofasapp.feature.browserext.notification.BrowserExtRequestPayload
-import com.twofasapp.feature.browserext.notification.DomainMatcher
 import com.twofasapp.data.services.domain.RecentlyAddedService
 import com.twofasapp.feature.about.navigation.AboutLicensesRoute
 import com.twofasapp.feature.about.navigation.AboutRoute
@@ -46,12 +46,15 @@ import com.twofasapp.feature.browserext.navigation.BrowserExtPairingRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtPermissionRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtRoute
 import com.twofasapp.feature.browserext.navigation.BrowserExtScanRoute
+import com.twofasapp.feature.browserext.notification.BrowserExtRequestPayload
+import com.twofasapp.feature.browserext.notification.DomainMatcher
 import com.twofasapp.feature.browserext.ui.request.BrowserExtRequestActivity
 import com.twofasapp.feature.externalimport.domain.ImportType
 import com.twofasapp.feature.externalimport.navigation.ExternalImportResultRoute
 import com.twofasapp.feature.externalimport.navigation.ExternalImportRoute
 import com.twofasapp.feature.externalimport.navigation.ExternalImportScanRoute
 import com.twofasapp.feature.externalimport.navigation.ExternalImportSelectorRoute
+import com.twofasapp.feature.home.navigation.EditServiceInitialAction
 import com.twofasapp.feature.home.navigation.HomeNavigationListener
 import com.twofasapp.feature.home.navigation.guidesNavigation
 import com.twofasapp.feature.home.navigation.homeNavigation
@@ -75,6 +78,7 @@ internal fun MainNavHost(
     onServiceAddedSuccessfully: (RecentlyAddedService) -> Unit,
 ) {
     val context = LocalContext.current
+    val homeSlideDistancePx = with(LocalDensity.current) { 96.dp.roundToPx() }
     val scope = rememberCoroutineScope()
     var authSuccessCallback: () -> Unit = {}
     val startAuthForResult =
@@ -122,8 +126,17 @@ internal fun MainNavHost(
             homeNavigation(
                 navController = navController,
                 listener = object : HomeNavigationListener {
-                    override fun openService(activity: Activity, serviceId: Long) {
-                        navController.navigate(Screen.EditService.routeWithArgs(NavArg.ServiceId to serviceId))
+                    override fun openService(
+                        activity: Activity,
+                        serviceId: Long,
+                        initialAction: EditServiceInitialAction,
+                    ) {
+                        navController.navigate(
+                            Screen.EditService.routeWithArgs(
+                                NavArg.ServiceId to serviceId,
+                                NavArg.EditServiceAction to initialAction.name,
+                            ),
+                        )
                     }
 
                     override fun openExternalImport() {
@@ -195,6 +208,7 @@ internal fun MainNavHost(
 
                     startAuthForResult.launch(context.intentFor<LockActivity>("canGoBack" to true))
                 },
+                homeSlideDistancePx = homeSlideDistancePx,
             )
 
             securityNavigation(navController = navController)
@@ -211,7 +225,12 @@ internal fun MainNavHost(
             bottomSheet(Modal.FocusService.route, listOf(FocusServiceModalNavArg.ServiceId)) {
                 FocusServiceModal(
                     openService = {
-                        navController.navigate(Screen.EditService.routeWithArgs(NavArg.ServiceId to it))
+                        navController.navigate(
+                            Screen.EditService.routeWithArgs(
+                                NavArg.ServiceId to it,
+                                NavArg.EditServiceAction to EditServiceInitialAction.Details.name,
+                            ),
+                        )
                         scope.launch { bottomSheetState.hide() }
                     },
                 )

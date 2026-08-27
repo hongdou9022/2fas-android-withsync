@@ -10,6 +10,7 @@ import com.twofasapp.prefs.usecase.InvalidPinStatusPreference
 import com.twofasapp.prefs.usecase.LockMethodPreference
 import com.twofasapp.prefs.usecase.PinOptionsPreference
 import com.twofasapp.prefs.usecase.PinSecuredPreference
+import com.twofasapp.prefs.usecase.SkipAppUnlockPreference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.math.ceil
@@ -19,6 +20,7 @@ internal class SecurityRepositoryImpl(
     private val pinSecuredPreference: PinSecuredPreference,
     private val lockMethodPreference: LockMethodPreference,
     private val invalidPinStatusPreference: InvalidPinStatusPreference,
+    private val skipAppUnlockPreference: SkipAppUnlockPreference,
     private val timeProvider: TimeProvider,
 ) : SecurityRepository {
 
@@ -61,6 +63,14 @@ internal class SecurityRepositoryImpl(
 
     override suspend fun editLockMethod(lockMethod: LockMethod) {
         lockMethodPreference.put(lockMethod.asEntity())
+    }
+
+    override fun observeSkipAppUnlock(): Flow<Boolean> {
+        return skipAppUnlockPreference.flow()
+    }
+
+    override suspend fun editSkipAppUnlock(skipAppUnlock: Boolean) {
+        skipAppUnlockPreference.put(skipAppUnlock)
     }
 
     override fun observeInvalidPinStatus(): Flow<InvalidPinStatus> {

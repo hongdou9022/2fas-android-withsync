@@ -123,6 +123,16 @@ internal fun SecurityScreen(
                 item { SettingsHeader(title = stringResource(id = R.string.settings__app_blocking)) }
 
                 item {
+                    SettingsSwitch(
+                        title = stringResource(id = R.string.settings__skip_app_unlock),
+                        subtitle = stringResource(id = R.string.settings__skip_app_unlock_description),
+                        icon = MdtIcons.LockOpen,
+                        checked = uiState.skipAppUnlock,
+                        onCheckedChange = { viewModel.toggleSkipAppUnlock() },
+                    )
+                }
+
+                item {
                     SettingsLink(
                         title = stringResource(id = R.string.settings__limit_of_trials),
                         icon = MdtIcons.Stop,

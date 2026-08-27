@@ -14,9 +14,11 @@ import com.twofasapp.data.services.domain.CloudSyncStatus
 import com.twofasapp.data.services.domain.Group
 import com.twofasapp.data.services.domain.RecentlyAddedService
 import com.twofasapp.data.services.otp.OtpLinkParser
+import com.twofasapp.data.session.SecurityRepository
 import com.twofasapp.data.session.SessionRepository
 import com.twofasapp.data.session.SettingsRepository
 import com.twofasapp.data.session.domain.AppSettings
+import com.twofasapp.data.session.domain.LockMethod
 import com.twofasapp.data.session.domain.ServicesSort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +31,7 @@ internal class ServicesViewModel(
     private val groupsRepository: GroupsRepository,
     private val settingsRepository: SettingsRepository,
     private val sessionRepository: SessionRepository,
+    private val securityRepository: SecurityRepository,
     private val notificationsRepository: NotificationsRepository,
     private val browserExtRepository: BrowserExtRepository,
     private val backupRepository: BackupRepository,
@@ -43,6 +46,7 @@ internal class ServicesViewModel(
 
     init {
         searchFocused(settingsRepository.getAppSettings().autoFocusSearch)
+        uiState.update { it.copy(hasLock = securityRepository.getLockMethod() != LockMethod.NoLock) }
 
         launchScoped {
             combine(
@@ -96,6 +100,7 @@ internal class ServicesViewModel(
 
                 uiState.update { state ->
                     state.copy(
+                        allServices = result.services,
                         services = filteredServices,
                         groups = result.groups,
                         showSyncNoticeBar = showSyncNoticeBar,
@@ -170,6 +175,12 @@ internal class ServicesViewModel(
         }
 
         launchScoped {
+            securityRepository.observeLockMethod().collect { lockMethod ->
+                uiState.update { it.copy(hasLock = lockMethod != LockMethod.NoLock) }
+            }
+        }
+
+        launchScoped {
             browserExtRepository.observeMobileDevice().collect { device ->
                 uiState.update { it.copy(showBrowserRequestPull = device.id.isNotBlank()) }
             }
@@ -229,6 +240,14 @@ internal class ServicesViewModel(
 
     fun deleteGroup(id: String) {
         launchScoped { groupsRepository.deleteGroup(id) }
+    }
+
+    fun setServiceGroup(serviceId: Long, groupId: String?) {
+        launchScoped { servicesRepository.setServiceGroup(serviceId, groupId) }
+    }
+
+    fun trashService(serviceId: Long) {
+        launchScoped { servicesRepository.trashService(serviceId) }
     }
 
     fun editGroup(id: String, name: String) {
@@ -307,6 +326,7 @@ internal class ServicesViewModel(
     fun onDragEnd(data: List<ServicesListItem>) {
         launchScoped(Dispatchers.IO) {
             var groupId: String? = null
+            val groupAssignments = mutableMapOf<Long, String?>()
 
             data.forEach { item ->
                 if (item is ServicesListItem.GroupItem) {
@@ -314,15 +334,38 @@ internal class ServicesViewModel(
                 }
 
                 if (item is ServicesListItem.ServiceItem && item.service.groupId != groupId) {
-                    servicesRepository.setServiceGroup(item.service.id, groupId)
+                    groupAssignments[item.service.id] = groupId
                 }
             }
+
+            servicesRepository.setServiceGroups(groupAssignments)
 
             servicesRepository.updateServicesOrder(
                 ids = data.filterIsInstance<ServicesListItem.ServiceItem>().map { it.service.id },
             )
 
             servicesRepository.setTickerEnabled(true)
+        }
+    }
+
+    fun onRefreshedDragEnd(reorderedVisibleIds: List<Long>) {
+        val allServices = uiState.value.allServices
+
+        launchScoped(Dispatchers.IO) {
+            try {
+                val allIds = allServices.map { it.id }
+                val visibleIds = reorderedVisibleIds.distinct().filter { it in allIds }
+                val visibleIdSet = visibleIds.toSet()
+                val reorderedIterator = visibleIds.iterator()
+
+                servicesRepository.updateServicesOrder(
+                    ids = allIds.map { id ->
+                        if (id in visibleIdSet) reorderedIterator.next() else id
+                    },
+                )
+            } finally {
+                servicesRepository.setTickerEnabled(true)
+            }
         }
     }
 

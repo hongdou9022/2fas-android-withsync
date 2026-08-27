@@ -26,7 +26,6 @@ import com.twofasapp.core.design.MdtTheme
 import com.twofasapp.core.design.feature.settings.SettingsDivider
 import com.twofasapp.core.design.feature.settings.SettingsHeader
 import com.twofasapp.core.design.feature.settings.SettingsLink
-import com.twofasapp.core.design.feature.settings.SettingsSwitch
 import com.twofasapp.core.design.foundation.topbar.TopAppBar
 import com.twofasapp.core.design.ktx.openSafely
 import com.twofasapp.locale.R
@@ -44,7 +43,6 @@ internal fun AboutScreen(
         uiState = uiState,
         onLicensesClick = openLicenses,
         onReviewClick = { viewModel.reviewDone() },
-        onSendCrashLogsToggle = { viewModel.toggleSendCrashLogs() },
     )
 }
 
@@ -53,7 +51,6 @@ private fun ScreenContent(
     uiState: AboutUiState,
     onLicensesClick: () -> Unit,
     onReviewClick: () -> Unit,
-    onSendCrashLogsToggle: () -> Unit,
 ) {
     val activity = LocalContext.current as Activity
     val uriHandler = LocalUriHandler.current
@@ -68,6 +65,7 @@ private fun ScreenContent(
 
                 item {
                     SettingsLink(title = TwLocale.strings.aboutWriteReview, icon = MdtIcons.Write, external = true) {
+                        onReviewClick()
                         uriHandler.openSafely(TwLocale.links.playStore, activity)
                     }
                 }
@@ -92,7 +90,51 @@ private fun ScreenContent(
 
                 item { SettingsDivider() }
 
-                item { SettingsHeader(title = TwLocale.strings.aboutShare) }
+                item { SettingsHeader(title = TwLocale.strings.aboutRepositories) }
+
+                item {
+                    SettingsLink(
+                        title = TwLocale.strings.aboutProjectRepository,
+                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_github),
+                        external = true,
+                    ) {
+                        uriHandler.openSafely(TwLocale.links.repository, activity)
+                    }
+                }
+
+                item {
+                    SettingsLink(
+                        title = TwLocale.strings.aboutOfficialRepository,
+                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_github),
+                        external = true,
+                    ) {
+                        uriHandler.openSafely(TwLocale.links.officialRepository, activity)
+                    }
+                }
+
+                item { SettingsDivider() }
+
+                item { SettingsHeader(title = TwLocale.strings.aboutSupportAndShare) }
+
+                item {
+                    SettingsLink(
+                        title = TwLocale.strings.settingsSupport,
+                        icon = MdtIcons.Support,
+                        external = true,
+                    ) {
+                        uriHandler.openSafely(TwLocale.links.support, activity)
+                    }
+                }
+
+                item {
+                    SettingsLink(
+                        title = TwLocale.strings.settingsDonate,
+                        icon = MdtIcons.Favorite,
+                        external = true,
+                    ) {
+                        uriHandler.openSafely(TwLocale.links.donate, activity)
+                    }
+                }
 
                 item {
                     SettingsLink(title = TwLocale.strings.aboutTellFriend, icon = MdtIcons.Share) {
@@ -102,94 +144,6 @@ private fun ScreenContent(
                             .setText(shareText)
                             .startChooser()
                     }
-                }
-
-                item { SettingsDivider() }
-
-                item { SettingsHeader(title = TwLocale.strings.aboutSocialMedia) }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialDiscord,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_discord),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.discord, activity)
-                    }
-                }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialYouTube,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_youtube),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.youtube, activity)
-                    }
-                }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialTwitter,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_twitter),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.twitter, activity)
-                    }
-                }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialGitHub,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_github),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.github, activity)
-                    }
-                }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialLinkedIn,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_linkedin),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.linkedin, activity)
-                    }
-                }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialReddit,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_reddit),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.reddit, activity)
-                    }
-                }
-
-                item {
-                    SettingsLink(
-                        title = TwLocale.strings.aboutSocialFacebook,
-                        image = painterResource(id = com.twofasapp.core.design.R.drawable.ic_facebook),
-                        external = true,
-                    ) {
-                        uriHandler.openSafely(TwLocale.links.facebook, activity)
-                    }
-                }
-
-                item { SettingsDivider() }
-
-                item { SettingsHeader(title = TwLocale.strings.aboutSendCrashes) }
-
-                item {
-                    SettingsSwitch(
-                        title = TwLocale.strings.settingsSendCrashes,
-                        subtitle = TwLocale.strings.settingsSendCrashesBody,
-                        icon = MdtIcons.Settings,
-                        checked = uiState.appSettings.sendCrashLogs,
-                        onCheckedChange = { onSendCrashLogsToggle() },
-                    )
                 }
 
                 item { SettingsDivider() }

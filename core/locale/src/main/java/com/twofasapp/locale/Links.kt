@@ -12,6 +12,8 @@ class Links {
     val privacyPolicy = "https://2fas.com/privacy-policy"
     val donate = "https://2fas.com/donate"
     val support = "https://2fas.com/help-center"
+    val repository = "https://github.com/hongdou9022/2fas-android-withsync"
+    val officialRepository = "https://github.com/twofas/2fas-android"
     val browserExt = "https://2fas.com/be"
     val youtube = "https://www.youtube.com/@2fas"
     val twitter = "https://twitter.com/2FAS_com"

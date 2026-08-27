@@ -16,6 +16,9 @@ interface SecurityRepository {
     fun getLockMethod(): LockMethod
     suspend fun editLockMethod(lockMethod: LockMethod)
 
+    fun observeSkipAppUnlock(): Flow<Boolean>
+    suspend fun editSkipAppUnlock(skipAppUnlock: Boolean)
+
     fun observeInvalidPinStatus(): Flow<InvalidPinStatus>
     suspend fun editInvalidPinStatus(invalidPinStatus: InvalidPinStatus)
 }

@@ -26,14 +26,16 @@ internal class SecurityViewModel(
             combine(
                 securityRepository.observeLockMethod(),
                 securityRepository.observePinOptions(),
-            ) { a, b -> Pair(a, b) }
-                .collect { (lockMethod, pinOptions) ->
+                securityRepository.observeSkipAppUnlock(),
+            ) { lockMethod, pinOptions, skipAppUnlock -> Triple(lockMethod, pinOptions, skipAppUnlock) }
+                .collect { (lockMethod, pinOptions, skipAppUnlock) ->
                     uiState.update { state ->
                         state.copy(
                             lockMethod = lockMethod,
                             pinTrials = pinOptions.trials,
                             pinTimeout = pinOptions.timeout,
                             pinDigits = pinOptions.digits,
+                            skipAppUnlock = skipAppUnlock,
                         )
                     }
                 }
@@ -58,6 +60,12 @@ internal class SecurityViewModel(
         launchScoped {
             val method = if (isEnabled) LockMethod.Biometrics else LockMethod.Pin
             securityRepository.editLockMethod(method)
+        }
+    }
+
+    fun toggleSkipAppUnlock() {
+        launchScoped {
+            securityRepository.editSkipAppUnlock(uiState.value.skipAppUnlock.not())
         }
     }
 
