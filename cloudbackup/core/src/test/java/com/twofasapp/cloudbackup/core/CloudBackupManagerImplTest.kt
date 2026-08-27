@@ -6,11 +6,8 @@ import com.twofasapp.cloudbackup.api.CloudBackupProvider
 import com.twofasapp.cloudbackup.api.CloudBackupProviderId
 import com.twofasapp.cloudbackup.api.CloudBackupProviderState
 import com.twofasapp.cloudbackup.api.CloudBackupResult
-import com.twofasapp.cloudbackup.api.CloudBackupTrigger
 import com.twofasapp.data.services.BackupRepository
 import com.twofasapp.data.services.domain.BackupContent
-import com.twofasapp.data.services.domain.BackupContentCreateResult
-import com.twofasapp.data.services.domain.BackupGroup
 import com.twofasapp.prefs.model.RemoteBackupKey
 import com.twofasapp.prefs.usecase.RemoteBackupKeyPreference
 import io.mockk.coEvery
@@ -30,7 +27,6 @@ class CloudBackupManagerImplTest {
     private val keyPreference = mockk<RemoteBackupKeyPreference>(relaxed = true)
     private val settingsStore = mockk<CloudBackupSettingsStore> {
         every { getMaxBackups() } returns 10
-        every { isHistoryEnabled() } returns false
     }
 
     @Test
@@ -123,125 +119,18 @@ class CloudBackupManagerImplTest {
     }
 
     @Test
-    fun `enabled history creates local-time entry and records deltas`() = runTest {
-        every { settingsStore.isHistoryEnabled() } returns true
-        coEvery { backupRepository.createBackupContentSerializedWithBackupKey() } returns "backup-content"
-        coEvery { backupRepository.createBackupContent() } returns BackupContentCreateResult(
-            BackupContent(groups = listOf(group("group-1", "Personal"))),
-        )
-        val provider = FakeProvider("webdav")
-
-        val result = manager(provider).backupNow(CloudBackupTrigger.Manual)
-
-        assertEquals(listOf(provider.id), result.successfulProviders)
-        val history = CloudBackupHistoryCodec.decode(provider.contents.getValue(CloudBackupManagerImpl.HistoryFileName))
-        val entry = history.entries.single()
-        assertTrue(Regex("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}$").matches(entry.createdAt))
-        assertEquals("Manual", entry.trigger)
-        assertEquals(listOf("Personal"), entry.groupsAdded)
-        assertEquals(entry.fileName, history.latestBackup)
-    }
-
-    @Test
-    fun `history document records added removed and changed items`() {
-        val firstFile = "2fas-backup-20260101-100000-000.2fas"
-        val secondFile = "2fas-backup-20260102-100000-000.2fas"
-        val first = CloudBackupHistoryDocument().append(
-            fileName = firstFile,
-            createdAt = "2026-01-01 10:00:00.000",
-            trigger = CloudBackupTrigger.ServicesChanged,
-            snapshot = CloudBackupSnapshot(
-                services = listOf(CloudBackupSnapshotItem("a", "one", "Alpha")),
-                groups = listOf(CloudBackupSnapshotItem("g", "one", "Personal")),
-            ),
-            retainedBackups = setOf(firstFile),
-        )
-
-        val second = first.append(
-            fileName = secondFile,
-            createdAt = "2026-01-02 10:00:00.000",
-            trigger = CloudBackupTrigger.Manual,
-            snapshot = CloudBackupSnapshot(
-                services = listOf(
-                    CloudBackupSnapshotItem("a", "two", "Alpha renamed"),
-                    CloudBackupSnapshotItem("b", "one", "Beta"),
-                ),
-            ),
-            retainedBackups = setOf(firstFile, secondFile),
-        )
-
-        val entry = second.entries.last()
-        assertEquals(listOf("Beta"), entry.servicesAdded)
-        assertEquals(emptyList<String>(), entry.servicesRemoved)
-        assertEquals(listOf("Alpha renamed"), entry.servicesChanged)
-        assertEquals(listOf("Personal"), entry.groupsRemoved)
-    }
-
-    @Test
-    fun `rotation removes matching history entry`() = runTest {
-        every { settingsStore.getMaxBackups() } returns 2
-        every { settingsStore.isHistoryEnabled() } returns true
-        coEvery { backupRepository.createBackupContentSerializedWithBackupKey() } returns "backup-content"
-        coEvery { backupRepository.createBackupContent() } returns BackupContentCreateResult(BackupContent.Empty)
-        val firstFile = "2fas-backup-20260101-100000-000.2fas"
-        val secondFile = "2fas-backup-20260201-100000-000.2fas"
-        val history = CloudBackupHistoryDocument()
-            .append(
-                firstFile,
-                "2026-01-01 10:00:00.000",
-                CloudBackupTrigger.ServicesChanged,
-                CloudBackupSnapshot(),
-                setOf(firstFile),
-            )
-            .append(
-                secondFile,
-                "2026-02-01 10:00:00.000",
-                CloudBackupTrigger.ServicesChanged,
-                CloudBackupSnapshot(),
-                setOf(firstFile, secondFile),
-            )
-        val provider = FakeProvider(
-            idValue = "webdav",
-            initialFiles = listOf(file(firstFile), file(secondFile), file(CloudBackupManagerImpl.HistoryFileName)),
-            initialContents = mapOf(
-                CloudBackupManagerImpl.HistoryFileName to CloudBackupHistoryCodec.encode(history),
-            ),
-        )
-
-        manager(provider).backupNow()
-
-        assertTrue(firstFile in provider.deleted)
-        val updated = CloudBackupHistoryCodec.decode(provider.contents.getValue(CloudBackupManagerImpl.HistoryFileName))
-        assertTrue(updated.entries.none { it.fileName == firstFile })
-        assertTrue(updated.entries.any { it.fileName == secondFile })
-    }
-
-    @Test
-    fun `manual delete removes backup and matching history entry even when history is disabled`() = runTest {
+    fun `manual delete removes selected backup`() = runTest {
         val backupFile = "2fas-backup-20260101-100000-000.2fas"
-        val history = CloudBackupHistoryDocument().append(
-            backupFile,
-            "2026-01-01 10:00:00.000",
-            CloudBackupTrigger.Manual,
-            CloudBackupSnapshot(),
-            setOf(backupFile),
-        )
         val provider = FakeProvider(
             idValue = "webdav",
-            initialFiles = listOf(file(backupFile), file(CloudBackupManagerImpl.HistoryFileName)),
-            initialContents = mapOf(
-                backupFile to "backup-content",
-                CloudBackupManagerImpl.HistoryFileName to CloudBackupHistoryCodec.encode(history),
-            ),
+            initialFiles = listOf(file(backupFile), file("notes.txt")),
         )
 
         val result = manager(provider).deleteBackup(file(backupFile))
 
         assertTrue(result is CloudBackupResult.Success)
         assertTrue(backupFile in provider.deleted)
-        val updated = CloudBackupHistoryCodec.decode(provider.contents.getValue(CloudBackupManagerImpl.HistoryFileName))
-        assertTrue(updated.entries.isEmpty())
-        assertEquals(null, updated.latestBackup)
+        assertTrue(provider.files.any { it.name == "notes.txt" })
     }
 
     @Test
@@ -274,12 +163,6 @@ class CloudBackupManagerImplTest {
         providerId = CloudBackupProviderId("webdav"),
         remoteId = name,
         name = name,
-    )
-
-    private fun group(id: String, name: String) = BackupGroup(
-        id = id,
-        name = name,
-        isExpanded = true,
     )
 
     private class FakeProvider(

@@ -16,7 +16,6 @@ dependencies {
     implementation(project(":prefs"))
 
     implementation(libs.kotlinCoroutines)
-    implementation(libs.kotlinSerialization)
     implementation(libs.workManager)
     implementation(libs.timber)
 

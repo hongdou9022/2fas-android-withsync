@@ -24,19 +24,10 @@ internal class CloudBackupSettingsViewModel(
                 uiState.update { it.copy(maxBackups = count) }
             }
         }
-        launchScoped {
-            manager.observeHistoryEnabled().collect { enabled ->
-                uiState.update { it.copy(historyEnabled = enabled) }
-            }
-        }
     }
 
     fun setMaxBackups(count: Int) {
         manager.setMaxBackups(count)
-    }
-
-    fun setHistoryEnabled(enabled: Boolean) {
-        manager.setHistoryEnabled(enabled)
     }
 
     fun backupNow() {
