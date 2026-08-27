@@ -20,6 +20,7 @@ interface ServicesRepository {
     suspend fun updateService(service: Service)
     suspend fun updateServicesFromCloud(services: List<Service>)
     suspend fun setServiceGroup(id: Long, groupId: String?)
+    suspend fun setServiceGroups(assignments: Map<Long, String?>)
     suspend fun trashService(id: Long, triggerSync: Boolean = true)
     suspend fun restoreService(id: Long)
     fun updateServicesOrder(ids: List<Long>)

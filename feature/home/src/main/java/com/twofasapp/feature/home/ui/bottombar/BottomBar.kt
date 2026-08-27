@@ -27,6 +27,7 @@ private val bottomNavItems
 interface BottomBarListener {
     fun openHome()
     fun openSettings()
+    fun openGroups()
 }
 
 @Composable

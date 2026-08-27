@@ -1,5 +1,6 @@
 package com.twofasapp.feature.home.ui.editservice.changebrand
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,6 +55,7 @@ import timber.log.Timber
 @Composable
 internal fun ChangeBrandScreen(
     close: () -> Unit,
+    saveAndClose: Boolean = false,
     onRequestIconClick: () -> Unit,
     viewModel: EditServiceViewModel = koinViewModel(),
     brandViewModel: ChangeBrandViewModel = koinViewModel(),
@@ -66,6 +68,8 @@ internal fun ChangeBrandScreen(
     var finish by remember { mutableStateOf(false) }
     val backDispatcher = LocalBackDispatcher
     val uriHandler = LocalUriHandler.current
+
+    BackHandler(enabled = saveAndClose) { close() }
 
     LaunchedEffect(finish) {
         if (finish) {
@@ -80,7 +84,7 @@ internal fun ChangeBrandScreen(
                 searchHint = stringResource(id = R.string.commons__search),
                 onSearchValueChanged = { brandViewModel.applySearchFilter(it) },
             ) {
-                backDispatcher.onBackPressed()
+                if (saveAndClose) close() else backDispatcher.onBackPressed()
             }
         },
     ) { padding ->
@@ -177,7 +181,11 @@ internal fun ChangeBrandScreen(
                                         .clip(CircleShape)
                                         .clickable {
                                             viewModel.updateBrand(it)
-                                            finish = true
+                                            if (saveAndClose) {
+                                                viewModel.saveService(onSaved = close)
+                                            } else {
+                                                finish = true
+                                            }
                                         }
                                         .padding(16.dp),
                                 )

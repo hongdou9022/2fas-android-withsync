@@ -4,6 +4,7 @@ import com.twofasapp.common.domain.SelectedTheme
 import com.twofasapp.common.environment.AppBuild
 import com.twofasapp.common.environment.BuildVariant
 import com.twofasapp.data.session.domain.AppSettings
+import com.twofasapp.data.session.domain.HomeUiMode
 import com.twofasapp.data.session.domain.ServicesSort
 import com.twofasapp.data.session.domain.ServicesStyle
 import com.twofasapp.storage.PlainPreferences
@@ -21,6 +22,7 @@ internal class SettingsLocalSource(
         private const val KeyShowBackupNotice = "showBackupNotice"
         private const val KeySelectedTheme = "selectedTheme"
         private const val KeyDynamicColors = "dynamicColors"
+        private const val KeyHomeUiMode = "homeUiMode"
         private const val KeyServicesStyle = "servicesStyle"
         private const val KeyServicesSort = "servicesSort"
         private const val KeyAutoFocusSearch = "autoFocusSearch"
@@ -42,13 +44,14 @@ internal class SettingsLocalSource(
             showNextCode = preferences.getBoolean(KeyShowNextCode) ?: false,
             autoFocusSearch = preferences.getBoolean(KeyAutoFocusSearch) ?: false,
             showBackupNotice = preferences.getBoolean(KeyShowBackupNotice) ?: true,
-            sendCrashLogs = preferences.getBoolean(KeySendCrashLogs) ?: true,
+            sendCrashLogs = preferences.getBoolean(KeySendCrashLogs) ?: false,
             allowScreenshots = preferences.getBoolean(KeyAllowScreenshots) ?: when (appBuild.buildVariant) {
                 BuildVariant.Release -> false
                 BuildVariant.ReleaseLocal -> true
                 BuildVariant.Debug -> true
             },
             selectedTheme = preferences.getString(KeySelectedTheme)?.let { SelectedTheme.valueOf(it) } ?: SelectedTheme.Auto,
+            homeUiMode = preferences.getString(KeyHomeUiMode)?.let { HomeUiMode.valueOf(it) } ?: HomeUiMode.Classic,
             servicesStyle = preferences.getString(KeyServicesStyle)?.let { ServicesStyle.valueOf(it) } ?: ServicesStyle.Default,
             servicesSort = preferences.getString(KeyServicesSort)?.let { ServicesSort.valueOf(it) } ?: ServicesSort.Manual,
             hideCodes = preferences.getBoolean(KeyHideCodes) ?: false,
@@ -69,6 +72,11 @@ internal class SettingsLocalSource(
     fun setDynamicColors(dynamicColors: Boolean) {
         appSettingsFlow.update { it.copy(dynamicColors = dynamicColors) }
         preferences.putBoolean(KeyDynamicColors, dynamicColors)
+    }
+
+    fun setHomeUiMode(homeUiMode: HomeUiMode) {
+        appSettingsFlow.update { it.copy(homeUiMode = homeUiMode) }
+        preferences.putString(KeyHomeUiMode, homeUiMode.name)
     }
 
     fun setServicesStyle(servicesStyle: ServicesStyle) {

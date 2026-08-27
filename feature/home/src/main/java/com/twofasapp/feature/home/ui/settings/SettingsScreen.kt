@@ -1,46 +1,40 @@
 package com.twofasapp.feature.home.ui.settings
 
 import android.app.Activity
-import androidx.compose.foundation.Image
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.twofasapp.core.design.MdtIcons
 import com.twofasapp.core.design.MdtTheme
 import com.twofasapp.core.design.feature.settings.SettingsDivider
 import com.twofasapp.core.design.feature.settings.SettingsLink
 import com.twofasapp.core.design.foundation.topbar.TopAppBar
-import com.twofasapp.core.design.ktx.openSafely
+import com.twofasapp.data.session.domain.HomeUiMode
 import com.twofasapp.feature.home.navigation.HomeNavigationListener
 import com.twofasapp.feature.home.ui.bottombar.BottomBar
 import com.twofasapp.feature.home.ui.bottombar.BottomBarListener
 import com.twofasapp.locale.TwLocale
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun SettingsRoute(
     listener: HomeNavigationListener,
     bottomBarListener: BottomBarListener,
+    viewModel: SettingsViewModel = koinViewModel(),
 ) {
+    val homeUiMode = viewModel.homeUiMode.collectAsStateWithLifecycle().value
+
     SettingsScreen(
         listener = listener,
         bottomBarListener = bottomBarListener,
+        refreshed = homeUiMode == HomeUiMode.Refreshed,
     )
 }
 
@@ -48,13 +42,23 @@ internal fun SettingsRoute(
 private fun SettingsScreen(
     listener: HomeNavigationListener,
     bottomBarListener: BottomBarListener,
+    refreshed: Boolean,
 ) {
     val activity = LocalContext.current as Activity
-    val uriHandler = LocalUriHandler.current
+
+    BackHandler(enabled = refreshed) { bottomBarListener.openHome() }
 
     Scaffold(
-        bottomBar = { BottomBar(1, bottomBarListener) },
-        topBar = { TopAppBar(titleText = TwLocale.strings.settingsSettings, showBackButton = false) },
+        bottomBar = {
+            if (refreshed.not()) BottomBar(1, bottomBarListener)
+        },
+        topBar = {
+            TopAppBar(
+                titleText = TwLocale.strings.settingsSettings,
+                showBackButton = refreshed,
+                onBackClick = bottomBarListener::openHome,
+            )
+        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -101,69 +105,8 @@ private fun SettingsScreen(
             }
 
             item {
-                SettingsLink(title = TwLocale.strings.settingsSupport, icon = MdtIcons.Support, external = true) {
-                    uriHandler.openSafely(TwLocale.links.support, activity)
-                }
-            }
-
-            item {
                 SettingsLink(title = TwLocale.strings.settingsAbout, icon = MdtIcons.Info) {
                     listener.openAbout()
-                }
-            }
-
-            item { SettingsDivider() }
-
-            item {
-                SettingsLink(title = TwLocale.strings.settingsDonate, icon = MdtIcons.Favorite, external = true) {
-                    uriHandler.openSafely(TwLocale.links.donate, activity)
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
-                ) {
-                    Image(
-                        painter = painterResource(id = com.twofasapp.core.design.R.drawable.ic_discord),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .clickable { uriHandler.openSafely(TwLocale.links.discord, activity) }
-                            .padding(14.dp),
-                    )
-                    Image(
-                        painter = painterResource(id = com.twofasapp.core.design.R.drawable.ic_youtube),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .clickable { uriHandler.openSafely(TwLocale.links.youtube, activity) }
-                            .padding(14.dp),
-                    )
-                    Image(
-                        painter = painterResource(id = com.twofasapp.core.design.R.drawable.ic_twitter),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .clickable { uriHandler.openSafely(TwLocale.links.twitter, activity) }
-                            .padding(14.dp),
-                    )
-                    Icon(
-                        painter = painterResource(id = com.twofasapp.core.design.R.drawable.ic_github),
-                        contentDescription = null,
-                        tint = MdtTheme.color.onSurfacePrimary,
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .clickable { uriHandler.openSafely(TwLocale.links.github, activity) }
-                            .padding(14.dp),
-                    )
                 }
             }
         }

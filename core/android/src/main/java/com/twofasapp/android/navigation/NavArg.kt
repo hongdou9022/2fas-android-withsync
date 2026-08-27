@@ -8,6 +8,11 @@ object NavArg {
     val Guide = navArgument("Guide") { type = NavType.StringType; }
     val GuideVariantIndex = navArgument("GuideVariantIndex") { type = NavType.IntType; }
     val ServiceId = navArgument("ServiceId") { type = NavType.LongType; defaultValue = 0L }
+    val GroupId = navArgument("GroupId") { type = NavType.StringType }
+    val EditServiceAction = navArgument("EditServiceAction") {
+        type = NavType.StringType
+        defaultValue = "Details"
+    }
     val ExtensionId = navArgument("ExtensionId") { type = NavType.StringType }
     val TurnOnBackup = navArgument("TurnOnBackup") { type = NavType.BoolType; defaultValue = false; }
     val ImportType = navArgument("ImportType") { type = NavType.StringType }

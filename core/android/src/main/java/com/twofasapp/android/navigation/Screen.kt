@@ -11,7 +11,9 @@ sealed class Screen(val route: String) {
     data object Startup : Screen("startup")
     data object Services : Screen("services")
     data object Settings : Screen("settings")
-    data object EditService : Screen("services/{${NavArg.ServiceId.name}}")
+    data object Groups : Screen("groups")
+    data object GroupEntries : Screen("groups/{${NavArg.GroupId.name}}/entries")
+    data object EditService : Screen("services/{${NavArg.ServiceId.name}}?action={${NavArg.EditServiceAction.name}}")
 
     data object AppSettings : Screen("appsettings")
     data object About : Screen("about")

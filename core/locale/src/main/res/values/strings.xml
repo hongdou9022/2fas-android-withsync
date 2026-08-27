@@ -394,6 +394,8 @@
     <string name="settings__pin_code">PIN code</string>
     <string name="settings__app_security">App security</string>
     <string name="settings__app_blocking">Lockout settings</string>
+    <string name="settings__skip_app_unlock">Skip app unlock</string>
+    <string name="settings__skip_app_unlock_description">Do not require PIN or biometric authentication when opening the app or returning from the background.</string>
     <string name="settings__face_id">Face ID</string>
     <string name="settings__touch_id">Touch ID</string>
     <!-- settings__how_many_attempts_header -->
@@ -526,6 +528,9 @@
     <string name="biometric_dialog_auth_title">Authenticate</string>
     <string name="biometric_dialog_auth_subtitle">Use your biometric credential</string>
     <string name="about_licenses">Open source licenses</string>
+    <string name="about_repositories">Repositories</string>
+    <string name="about_project_repository">Project repository</string>
+    <string name="about_official_repository">Official repository</string>
     <string name="externalimport_description">You can import your Tokens to 2FAS from different apps. Choose an app from the list and follow the instructions.</string>
     <string name="externalimport_select_app">Select app</string>
     <string name="externalimport_google_authenticator">Google Authenticator</string>
@@ -1038,4 +1043,23 @@
     <string name="webdav_unauthorized">The WebDAV username or password was rejected.</string>
     <string name="webdav_network_error">The WebDAV server could not be reached.</string>
     <string name="webdav_unknown_error">The WebDAV operation failed.</string>
+    <string name="settings__home_ui_mode">Home screen style</string>
+    <string name="settings__home_ui_mode_classic">Classic</string>
+    <string name="settings__home_ui_mode_refreshed">Refreshed</string>
+    <string name="groups__default">Default</string>
+    <string name="groups__title">Group</string>
+    <string name="groups__all">All</string>
+    <string name="groups__add">Add group</string>
+    <string name="groups__assign_entries">Assign entries</string>
+    <string name="groups__change_name">Change name</string>
+    <string name="commons__back">Back</string>
+    <string name="service_actions__title">Edit</string>
+    <string name="service_actions__edit_details">Edit details</string>
+    <string name="service_actions__change_icon">Change icon</string>
+    <string name="service_actions__assign_group">Assign group</string>
+    <string name="service_actions__show_qr">Show QR code</string>
+    <string name="service_actions__delete_message">Move this token to trash? You can restore it later.</string>
+    <string name="home__menu">Menu</string>
+    <string name="home__main_menu">Main menu</string>
+    <string name="home__more">More</string>
 </resources>

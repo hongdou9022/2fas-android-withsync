@@ -92,6 +92,7 @@ internal class EditServiceViewModel(
         updateService {
             it.copy(
                 iconCollectionId = brandIcon.iconCollectionId,
+                imageType = Service.ImageType.IconCollection,
             )
         }
     }
@@ -154,10 +155,11 @@ internal class EditServiceViewModel(
         uiState.update { it.copy(isQrVisible = uiState.value.isQrVisible.not()) }
     }
 
-    fun saveService() {
+    fun saveService(onSaved: () -> Unit = {}) {
         launchScoped {
             servicesRepository.updateService(uiState.value.service)
             uiState.update { it.copy(finish = true) }
+            onSaved()
         }
     }
 }

@@ -6,6 +6,7 @@ import com.twofasapp.data.services.domain.Group
 import com.twofasapp.data.session.domain.AppSettings
 
 data class ServicesUiState(
+    val allServices: List<Service> = emptyList(),
     val services: List<Service> = emptyList(),
     val groups: List<Group> = emptyList(),
     val totalGroups: Int = 0,
@@ -19,6 +20,7 @@ data class ServicesUiState(
     val showAppReview: Boolean = false,
     val showPassBanner: Boolean = false,
     val hasUnreadNotifications: Boolean = false,
+    val hasLock: Boolean = false,
     val showBrowserRequestPull: Boolean = false,
     val browserRequestPulling: Boolean = false,
     val appSettings: AppSettings = AppSettings(),
@@ -26,7 +28,7 @@ data class ServicesUiState(
     val items: List<ServicesListItem> = mutableListOf(),
 ) {
     fun getService(id: Long): Service? {
-        return services.firstOrNull { it.id == id }
+        return allServices.firstOrNull { it.id == id }
     }
 }
 

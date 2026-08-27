@@ -394,6 +394,8 @@
     <string name="settings__pin_code">PIN 码</string>
     <string name="settings__app_security">应用安全</string>
     <string name="settings__app_blocking">锁定设置</string>
+    <string name="settings__skip_app_unlock">进入应用时免验证</string>
+    <string name="settings__skip_app_unlock_description">启动应用或从后台返回时，无需验证 PIN 或生物识别。</string>
     <string name="settings__face_id">面容 ID</string>
     <string name="settings__touch_id">触控 ID</string>
     <!-- settings__how_many_attempts_header -->
@@ -526,6 +528,9 @@
     <string name="biometric_dialog_auth_title">身份验证</string>
     <string name="biometric_dialog_auth_subtitle">使用您的生物识别</string>
     <string name="about_licenses">开源许可证</string>
+    <string name="about_repositories">仓库</string>
+    <string name="about_project_repository">项目仓库</string>
+    <string name="about_official_repository">官方仓库</string>
     <string name="externalimport_description">您可以从不同的应用将令牌导入 2FAS。从列表中选择一个应用并按照说明进行操作。</string>
     <string name="externalimport_select_app">选择应用</string>
     <string name="externalimport_google_authenticator">Google Authenticator</string>
@@ -1028,4 +1033,23 @@
     <string name="webdav_unauthorized">WebDAV 用户名或密码不正确。</string>
     <string name="webdav_network_error">无法连接到 WebDAV 服务器。</string>
     <string name="webdav_unknown_error">WebDAV 操作失败。</string>
+    <string name="settings__home_ui_mode">主界面样式</string>
+    <string name="settings__home_ui_mode_classic">经典</string>
+    <string name="settings__home_ui_mode_refreshed">焕新</string>
+    <string name="groups__default">默认</string>
+    <string name="groups__title">分组</string>
+    <string name="groups__all">全部</string>
+    <string name="groups__add">新增分组</string>
+    <string name="groups__assign_entries">指定条目</string>
+    <string name="groups__change_name">更改名称</string>
+    <string name="commons__back">返回</string>
+    <string name="service_actions__title">编辑</string>
+    <string name="service_actions__edit_details">编辑详情</string>
+    <string name="service_actions__change_icon">更改图标</string>
+    <string name="service_actions__assign_group">指定分组</string>
+    <string name="service_actions__show_qr">显示二维码</string>
+    <string name="service_actions__delete_message">要将此令牌移入回收站吗？之后仍可恢复。</string>
+    <string name="home__menu">菜单</string>
+    <string name="home__main_menu">主菜单</string>
+    <string name="home__more">更多</string>
 </resources>

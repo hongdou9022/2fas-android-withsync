@@ -80,6 +80,7 @@ internal fun EditServiceScreen(
     onSecurityClick: () -> Unit,
     onAuthenticateSecretClick: () -> Unit,
     onAuthenticateQrCodeClick: () -> Unit,
+    showQrOnStart: Boolean = false,
     viewModel: EditServiceViewModel,
 ) {
     val uiState = viewModel.uiState.collectAsState().value
@@ -91,6 +92,7 @@ internal fun EditServiceScreen(
     val showSecretNoLockDialog = remember { mutableStateOf(false) }
     val showQrNoLockDialog = remember { mutableStateOf(false) }
     val showUnsavedChangesDialog = remember { mutableStateOf(false) }
+    var initialQrHandled by remember { mutableStateOf(false) }
 
     val isBrandSelected = service.imageType == Service.ImageType.IconCollection
     val isLabelSelected = isBrandSelected.not()
@@ -100,6 +102,17 @@ internal fun EditServiceScreen(
     if (uiState.finish) {
         LaunchedEffect(Unit) {
             scope.launch { onBackClick() }
+        }
+    }
+
+    LaunchedEffect(showQrOnStart, service.id) {
+        if (showQrOnStart && service.id != 0L && initialQrHandled.not()) {
+            initialQrHandled = true
+            when {
+                uiState.isAuthenticated -> viewModel.toggleQrVisibility()
+                uiState.hasLock -> onAuthenticateQrCodeClick()
+                else -> showQrNoLockDialog.value = true
+            }
         }
     }
 
@@ -279,7 +292,7 @@ internal fun EditServiceScreen(
 
                         ) {
                             OutlinedTextField(
-                                value = uiState.groups.firstOrNull { it.id == service.groupId }?.name ?: TwLocale.strings.servicesMyTokens,
+                                value = uiState.groups.firstOrNull { it.id == service.groupId }?.name ?: TwLocale.strings.groupsDefault,
                                 onValueChange = { },
                                 label = { Text(stringResource(id = R.string.tokens__group)) },
                                 readOnly = true,
@@ -297,7 +310,7 @@ internal fun EditServiceScreen(
                             ) {
                                 DropdownMenuItem(
                                     text = {
-                                        Text(text = TwLocale.strings.servicesMyTokens, color = MdtTheme.color.onSurfacePrimary)
+                                        Text(text = TwLocale.strings.groupsDefault, color = MdtTheme.color.onSurfacePrimary)
                                     },
                                     onClick = {
                                         viewModel.updateGroup(null)

@@ -3,6 +3,7 @@ package com.twofasapp.feature.home.ui.editservice
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -10,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.twofasapp.android.navigation.NavAnimation
+import com.twofasapp.feature.home.navigation.EditServiceInitialAction
 import com.twofasapp.feature.home.ui.editservice.advancedsettings.AdvancedSettingsScreen
 import com.twofasapp.feature.home.ui.editservice.changebrand.ChangeBrandScreen
 import com.twofasapp.feature.home.ui.editservice.changelabel.ChangeLabelScreen
@@ -33,9 +35,16 @@ internal fun EditServiceScreenRoute(
     navController: NavController,
     openSecurity: () -> Unit,
     openAuth: (successCallback: () -> Unit) -> Unit,
+    initialAction: EditServiceInitialAction = EditServiceInitialAction.Details,
     serviceViewModel: EditServiceViewModel = koinViewModel(),
 ) {
     val navHostController = rememberNavController()
+
+    LaunchedEffect(initialAction) {
+        if (initialAction == EditServiceInitialAction.Icon) {
+            navHostController.navigate(EditServiceScreen.ChangeBrand.route)
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -66,6 +75,7 @@ internal fun EditServiceScreenRoute(
                                 serviceViewModel.qrAuthenticated()
                             }
                         },
+                        showQrOnStart = initialAction == EditServiceInitialAction.Qr,
                         viewModel = serviceViewModel,
                     )
                 }
@@ -85,7 +95,14 @@ internal fun EditServiceScreenRoute(
 
             composable(EditServiceScreen.ChangeBrand.route) {
                 ChangeBrandScreen(
-                    close = { navHostController.popBackStack() },
+                    close = {
+                        if (initialAction == EditServiceInitialAction.Icon) {
+                            navController.popBackStack()
+                        } else {
+                            navHostController.popBackStack()
+                        }
+                    },
+                    saveAndClose = initialAction == EditServiceInitialAction.Icon,
                     onRequestIconClick = { navHostController.navigate(EditServiceScreen.RequestIcon.route) },
                     viewModel = serviceViewModel,
                 )
