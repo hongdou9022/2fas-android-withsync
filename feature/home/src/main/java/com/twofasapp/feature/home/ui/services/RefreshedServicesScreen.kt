@@ -73,7 +73,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -129,7 +128,6 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 import org.burnoutcrew.reorderable.reorderable
-import kotlin.math.ceil
 import com.twofasapp.locale.R as LocaleR
 
 internal sealed interface SelectedGroup {
@@ -169,10 +167,10 @@ internal fun RefreshedServicesScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val hapticFeedback = LocalHapticFeedback.current
-    val density = LocalDensity.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val groupAnimationProgress = remember { Animatable(1f) }
 
     var selectedGroupKey by rememberSaveable { mutableStateOf(GroupAllKey) }
     var showMenu by remember { mutableStateOf(false) }
@@ -184,18 +182,10 @@ internal fun RefreshedServicesScreen(
     var serviceForQr by remember { mutableStateOf<Service?>(null) }
     var showQrNoLockDialog by remember { mutableStateOf(false) }
     var groupAnimationVersion by remember { mutableStateOf(0) }
-    var groupAnimationItemCount by remember { mutableStateOf(0) }
-    var groupAnimationActive by remember { mutableStateOf(false) }
 
     val selectedGroup = selectedGroupKey.toSelectedGroup()
     val isSearching = uiState.searchFocused || uiState.searchQuery.isNotEmpty()
-    val visibleServices = uiState.services.filter { service ->
-        when (selectedGroup) {
-            SelectedGroup.All -> true
-            SelectedGroup.Default -> service.groupId == null
-            is SelectedGroup.Custom -> service.groupId == selectedGroup.id
-        }
-    }
+    val visibleServices = uiState.services.filter { it.belongsTo(selectedGroup) }
     val manualSorting = uiState.appSettings.servicesSort == ServicesSort.Manual
     // Keep the state holder stable so the reorder controller never writes into an obsolete list after a save.
     var reorderableServices by remember { mutableStateOf(visibleServices) }
@@ -244,11 +234,14 @@ internal fun RefreshedServicesScreen(
     LaunchedEffect(groupAnimationVersion) {
         if (groupAnimationVersion == 0) return@LaunchedEffect
 
-        delay(
-            StratumGroupItemDurationMillis +
-                groupAnimationItemCount * StratumGroupItemDelayMillis,
+        groupAnimationProgress.snapTo(0f)
+        groupAnimationProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(
+                durationMillis = StratumGroupTransitionDurationMillis,
+                easing = LinearEasing,
+            ),
         )
-        groupAnimationActive = false
     }
 
     uiState.events.firstOrNull()?.let { event ->
@@ -256,11 +249,7 @@ internal fun RefreshedServicesScreen(
             ServicesUiEvent.ShowQrFromGalleryDialog -> showQrFromGalleryDialog = true
             is ServicesUiEvent.ServiceAdded -> {
                 val added = uiState.getService(event.id)
-                val isVisible = added != null && when (selectedGroup) {
-                    SelectedGroup.All -> true
-                    SelectedGroup.Default -> added.groupId == null
-                    is SelectedGroup.Custom -> added.groupId == selectedGroup.id
-                }
+                val isVisible = added?.belongsTo(selectedGroup) == true
 
                 if (isVisible) {
                     LaunchedEffect(event.id) {
@@ -449,7 +438,7 @@ internal fun RefreshedServicesScreen(
                     StratumGroupTransition(
                         animationVersion = groupAnimationVersion,
                         itemIndex = index,
-                        animate = groupAnimationActive && index < groupAnimationItemCount,
+                        transitionProgress = groupAnimationProgress.value,
                     ) {
                         RefreshedServiceCard(
                             state = serviceState,
@@ -492,16 +481,7 @@ internal fun RefreshedServicesScreen(
             onGroupSelected = { group ->
                 val nextGroupKey = group.key()
                 if (selectedGroupKey != nextGroupKey) {
-                    val serviceItemHeight = if (uiState.appSettings.servicesStyle == ServicesStyle.Compact) {
-                        92.dp
-                    } else {
-                        104.dp
-                    }
-                    val itemPitchPx = with(density) { (serviceItemHeight + 8.dp).toPx() }
-                    groupAnimationItemCount = ceil(
-                        listState.layoutInfo.viewportSize.height / itemPitchPx,
-                    ).toInt().coerceAtLeast(1)
-                    groupAnimationActive = true
+                    reorderableServices = uiState.services.filter { it.belongsTo(group) }
                     selectedGroupKey = nextGroupKey
                     groupAnimationVersion += 1
                 }
@@ -622,37 +602,28 @@ internal fun RefreshedServicesScreen(
 private fun StratumGroupTransition(
     animationVersion: Int,
     itemIndex: Int,
-    animate: Boolean,
+    transitionProgress: Float,
     content: @Composable () -> Unit,
 ) {
-    val progress = remember(animationVersion) {
-        Animatable(if (animationVersion == 0 || animate.not()) 1f else 0f)
-    }
-
-    LaunchedEffect(progress, itemIndex, animate) {
-        if (animationVersion == 0 || animate.not()) {
-            progress.snapTo(1f)
-            return@LaunchedEffect
-        }
-
-        delay(itemIndex * StratumGroupItemDelayMillis)
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = StratumGroupItemDurationMillis,
-                easing = StratumDecelerateEasing,
-            ),
-        )
+    val progress = if (animationVersion == 0 || itemIndex >= StratumGroupMaxAnimatedItems) {
+        1f
+    } else {
+        val elapsedMillis = transitionProgress * StratumGroupTransitionDurationMillis
+        val itemProgress = (
+            (elapsedMillis - itemIndex * StratumGroupItemDelayMillis) /
+                StratumGroupItemDurationMillis
+            ).coerceIn(0f, 1f)
+        StratumDecelerateEasing.transform(itemProgress)
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer {
-                val remaining = 1f - progress.value
+                val remaining = 1f - progress
                 val scale = 1f + (StratumGroupItemStartScaleDelta * remaining)
 
-                alpha = progress.value
+                alpha = progress
                 translationY = -size.height * StratumGroupItemStartOffset * remaining
                 scaleX = scale
                 scaleY = scale
@@ -1416,6 +1387,14 @@ private fun SelectedGroup.title(groups: List<Group>): String {
     }
 }
 
+private fun Service.belongsTo(group: SelectedGroup): Boolean {
+    return when (group) {
+        SelectedGroup.All -> true
+        SelectedGroup.Default -> groupId == null
+        is SelectedGroup.Custom -> groupId == group.id
+    }
+}
+
 private const val GroupAllKey = "__all__"
 private const val GroupDefaultKey = "__default__"
 private const val HomePageTransitionDurationMillis = 450
@@ -1423,7 +1402,10 @@ private const val HomeMenuOpenDurationMillis = 300
 private const val HomeMenuDismissDurationMillis = 250
 private const val HomeMenuScrimAlpha = 0.32f
 private const val StratumGroupItemDurationMillis = 500
-private const val StratumGroupItemDelayMillis = 25L
+private const val StratumGroupItemDelayMillis = 25
+private const val StratumGroupMaxAnimatedItems = 12
+private const val StratumGroupTransitionDurationMillis =
+    StratumGroupItemDurationMillis + (StratumGroupMaxAnimatedItems - 1) * StratumGroupItemDelayMillis
 private const val StratumGroupItemStartOffset = 0.2f
 private const val StratumGroupItemStartScaleDelta = 0.05f
 private val StratumDecelerateEasing = Easing { progress ->
