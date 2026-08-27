@@ -84,7 +84,7 @@ class BackupRepositoryImpl(
     ): BackupContentCreateResult {
         return withContext(dispatchers.io) {
             val groups = groupsRepository.observeGroups().first().asBackup()
-            val services = servicesRepository.getServices().asBackup()
+            val services = servicesRepository.observeServices().first().asBackup()
 
             val backupContent = BackupContent(
                 services = services,
@@ -204,11 +204,13 @@ class BackupRepositoryImpl(
             }
 
             // Import services
-            val localSecrets = servicesRepository.getServices().map { it.secret.lowercase() }
+            val localServices = servicesRepository.observeServices().first()
+            val localSecrets = localServices.map { it.secret.lowercase() }
 
-            val servicesToImport = backupContent.services
-                .filter { localSecrets.contains(it.secret.lowercase()).not() }
+            val orderedBackupServices = backupContent.services
                 .sortedBy { it.order.position }
+            val servicesToImport = orderedBackupServices
+                .filter { localSecrets.contains(it.secret.lowercase()).not() }
                 .map {
                     val serviceTypeIdFromLegacy = it.type?.name?.let { type -> LegacyTypeToId.serviceIds.getOrDefault(type, null) }
                     var iconCollectionIdFromLegacy = ServiceIcons.getIconCollection(serviceTypeIdFromLegacy.orEmpty())
@@ -240,6 +242,16 @@ class BackupRepositoryImpl(
             }
 
             servicesRepository.addServices(servicesToImport, triggerCloudBackup)
+
+            val mergedServices = servicesRepository.observeServices().first()
+            val mergedBySecret = mergedServices.associateBy { it.secret.lowercase() }
+            val backupOrderIds = orderedBackupServices
+                .mapNotNull { mergedBySecret[it.secret.lowercase()]?.id }
+                .distinct()
+            val backupOrderIdSet = backupOrderIds.toSet()
+            servicesRepository.updateServicesOrder(
+                backupOrderIds + mergedServices.map { it.id }.filterNot(backupOrderIdSet::contains),
+            )
         }
     }
 
