@@ -181,6 +181,8 @@ internal fun RefreshedServicesScreen(
     var serviceForQr by remember { mutableStateOf<Service?>(null) }
     var showQrNoLockDialog by remember { mutableStateOf(false) }
     var groupAnimationVersion by remember { mutableStateOf(0) }
+    var groupAnimationItemCount by remember { mutableStateOf(0) }
+    var groupAnimationActive by remember { mutableStateOf(false) }
 
     val selectedGroup = selectedGroupKey.toSelectedGroup()
     val isSearching = uiState.searchFocused || uiState.searchQuery.isNotEmpty()
@@ -234,6 +236,16 @@ internal fun RefreshedServicesScreen(
         if (selectedGroup is SelectedGroup.Custom && uiState.groups.none { it.id == selectedGroup.id }) {
             selectedGroupKey = GroupAllKey
         }
+    }
+
+    LaunchedEffect(groupAnimationVersion) {
+        if (groupAnimationVersion == 0) return@LaunchedEffect
+
+        delay(
+            StratumGroupItemDurationMillis +
+                groupAnimationItemCount * StratumGroupItemDelayMillis,
+        )
+        groupAnimationActive = false
     }
 
     uiState.events.firstOrNull()?.let { event ->
@@ -434,6 +446,7 @@ internal fun RefreshedServicesScreen(
                     StratumGroupTransition(
                         animationVersion = groupAnimationVersion,
                         itemIndex = index,
+                        animate = groupAnimationActive && index < groupAnimationItemCount,
                     ) {
                         RefreshedServiceCard(
                             state = serviceState,
@@ -476,6 +489,10 @@ internal fun RefreshedServicesScreen(
             onGroupSelected = { group ->
                 val nextGroupKey = group.key()
                 if (selectedGroupKey != nextGroupKey) {
+                    groupAnimationItemCount = listState.layoutInfo.visibleItemsInfo
+                        .count { it.key is Long }
+                        .coerceAtLeast(1)
+                    groupAnimationActive = true
                     selectedGroupKey = nextGroupKey
                     groupAnimationVersion += 1
                 }
@@ -596,14 +613,18 @@ internal fun RefreshedServicesScreen(
 private fun StratumGroupTransition(
     animationVersion: Int,
     itemIndex: Int,
+    animate: Boolean,
     content: @Composable () -> Unit,
 ) {
     val progress = remember(animationVersion) {
-        Animatable(if (animationVersion == 0) 1f else 0f)
+        Animatable(if (animationVersion == 0 || animate.not()) 1f else 0f)
     }
 
-    LaunchedEffect(progress, itemIndex) {
-        if (animationVersion == 0) return@LaunchedEffect
+    LaunchedEffect(progress, itemIndex, animate) {
+        if (animationVersion == 0 || animate.not()) {
+            progress.snapTo(1f)
+            return@LaunchedEffect
+        }
 
         delay(itemIndex * StratumGroupItemDelayMillis)
         progress.animateTo(
