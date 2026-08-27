@@ -13,6 +13,7 @@ import com.twofasapp.base.lifecycle.AuthLifecycle
 import com.twofasapp.common.domain.SelectedTheme
 import com.twofasapp.core.design.AppTheme
 import com.twofasapp.core.design.LocalAppTheme
+import com.twofasapp.core.design.LocalCustomColor
 import com.twofasapp.core.design.LocalDynamicColors
 import com.twofasapp.core.design.MainAppTheme
 import com.twofasapp.core.design.window.ActivityHelper
@@ -27,10 +28,11 @@ class WidgetSettingsActivity : ComponentActivity(), AuthAware {
     private val authTracker: AuthTracker by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val appSettings = settingsRepository.getAppSettings()
         ActivityHelper.onCreate(
             activity = this,
-            selectedTheme = settingsRepository.getAppSettings().selectedTheme,
-            allowScreenshots = settingsRepository.getAppSettings().allowScreenshots,
+            selectedTheme = appSettings.selectedTheme,
+            allowScreenshots = appSettings.allowScreenshots,
         )
         super.onCreate(savedInstanceState)
         val appWidgetId = intent?.extras?.getInt(
@@ -50,12 +52,13 @@ class WidgetSettingsActivity : ComponentActivity(), AuthAware {
 
         setContent {
             CompositionLocalProvider(
-                LocalAppTheme provides when (settingsRepository.getAppSettings().selectedTheme) {
+                LocalAppTheme provides when (appSettings.selectedTheme) {
                     SelectedTheme.Auto -> AppTheme.Auto
                     SelectedTheme.Light -> AppTheme.Light
                     SelectedTheme.Dark -> AppTheme.Dark
                 },
-                LocalDynamicColors provides settingsRepository.getAppSettings().dynamicColors,
+                LocalCustomColor provides appSettings.customColor.takeIf { appSettings.customColors },
+                LocalDynamicColors provides appSettings.dynamicColors,
             ) {
                 MainAppTheme {
                     WidgetSettingsScreen(

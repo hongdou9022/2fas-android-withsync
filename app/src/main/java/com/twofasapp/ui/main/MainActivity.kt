@@ -24,6 +24,7 @@ import com.twofasapp.common.domain.SelectedTheme
 import com.twofasapp.core.design.AppTheme
 import com.twofasapp.core.design.AppThemeState
 import com.twofasapp.core.design.LocalAppTheme
+import com.twofasapp.core.design.LocalCustomColor
 import com.twofasapp.core.design.LocalDynamicColors
 import com.twofasapp.core.design.MainAppTheme
 import com.twofasapp.core.design.ktx.makeWindowSecure
@@ -103,6 +104,7 @@ class MainActivity : AppCompatActivity(), AuthAware {
                     SelectedTheme.Light -> AppTheme.Light
                     SelectedTheme.Dark -> AppTheme.Dark
                 },
+                LocalCustomColor provides appSettings.customColor.takeIf { appSettings.customColors },
                 LocalDynamicColors provides appSettings.dynamicColors,
             ) {
                 MainAppTheme {

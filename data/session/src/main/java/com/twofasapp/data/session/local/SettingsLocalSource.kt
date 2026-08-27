@@ -4,6 +4,7 @@ import com.twofasapp.common.domain.SelectedTheme
 import com.twofasapp.common.environment.AppBuild
 import com.twofasapp.common.environment.BuildVariant
 import com.twofasapp.data.session.domain.AppSettings
+import com.twofasapp.data.session.domain.DefaultCustomColor
 import com.twofasapp.data.session.domain.HomeUiMode
 import com.twofasapp.data.session.domain.ServicesSort
 import com.twofasapp.data.session.domain.ServicesStyle
@@ -22,6 +23,8 @@ internal class SettingsLocalSource(
         private const val KeyShowBackupNotice = "showBackupNotice"
         private const val KeySelectedTheme = "selectedTheme"
         private const val KeyDynamicColors = "dynamicColors"
+        private const val KeyCustomColors = "customColors"
+        private const val KeyCustomColor = "customColor"
         private const val KeyHomeUiMode = "homeUiMode"
         private const val KeyServicesStyle = "servicesStyle"
         private const val KeyServicesSort = "servicesSort"
@@ -56,6 +59,8 @@ internal class SettingsLocalSource(
             servicesSort = preferences.getString(KeyServicesSort)?.let { ServicesSort.valueOf(it) } ?: ServicesSort.Manual,
             hideCodes = preferences.getBoolean(KeyHideCodes) ?: false,
             dynamicColors = preferences.getBoolean(KeyDynamicColors) ?: false,
+            customColors = preferences.getBoolean(KeyCustomColors) ?: false,
+            customColor = preferences.getLong(KeyCustomColor) ?: DefaultCustomColor,
         )
     }
 
@@ -72,6 +77,16 @@ internal class SettingsLocalSource(
     fun setDynamicColors(dynamicColors: Boolean) {
         appSettingsFlow.update { it.copy(dynamicColors = dynamicColors) }
         preferences.putBoolean(KeyDynamicColors, dynamicColors)
+    }
+
+    fun setCustomColors(customColors: Boolean) {
+        appSettingsFlow.update { it.copy(customColors = customColors) }
+        preferences.putBoolean(KeyCustomColors, customColors)
+    }
+
+    fun setCustomColor(customColor: Long) {
+        appSettingsFlow.update { it.copy(customColor = customColor) }
+        preferences.putLong(KeyCustomColor, customColor)
     }
 
     fun setHomeUiMode(homeUiMode: HomeUiMode) {

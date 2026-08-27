@@ -12,6 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.twofasapp.core.design.ktx.currentActivity
@@ -38,6 +41,7 @@ import com.twofasapp.core.design.theme.switchTrackLight
 val LocalAppTheme = staticCompositionLocalOf { AppTheme.Auto }
 val LocalThemeColors = staticCompositionLocalOf { ThemeColors() }
 val LocalDynamicColors = staticCompositionLocalOf { false }
+val LocalCustomColor = staticCompositionLocalOf<Long?> { null }
 
 enum class AppTheme {
     Auto, Light, Dark,
@@ -50,6 +54,7 @@ fun MainAppTheme(
     LockScreenOrientation(orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
 
     val isDynamicColorEnabled = LocalDynamicColors.current
+    val customColorArgb = LocalCustomColor.current
 
     val isInDarkTheme = when (LocalAppTheme.current) {
         AppTheme.Auto -> isSystemInDarkTheme()
@@ -57,15 +62,17 @@ fun MainAppTheme(
         AppTheme.Dark -> true
     }
 
+    val isCustomColorEnabled = customColorArgb != null && isDynamicColorEnabled.not()
     val colorScheme: ColorScheme = when {
         isDynamicColorEnabled && isInDarkTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicDarkColorScheme(LocalContext.current)
         isDynamicColorEnabled && !isInDarkTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicLightColorScheme(LocalContext.current)
+        isCustomColorEnabled -> customColorScheme(requireNotNull(customColorArgb).toInt(), isInDarkTheme)
         isInDarkTheme -> OverriddenDarkColors
         else -> OverriddenLightColors
     }
 
     val themeColors = ThemeColors(
-        seed = if (isInDarkTheme) seedDark else seedLight,
+        seed = if (isCustomColorEnabled) Color(requireNotNull(customColorArgb).toInt()) else if (isInDarkTheme) seedDark else seedLight,
         primary = colorScheme.primary,
         background = colorScheme.background,
         surface = colorScheme.surface,
@@ -73,7 +80,13 @@ fun MainAppTheme(
         onSurfacePrimary = if (isInDarkTheme) onSurfacePrimaryDark else onSurfacePrimaryLight,
         onSurfaceSecondary = if (isInDarkTheme) onSurfaceSecondaryDark else onSurfaceSecondaryLight,
         onSurfaceTertiary = if (isInDarkTheme) onSurfaceTertiaryDark else onSurfaceTertiaryLight,
-        primaryIndicator = if (isInDarkTheme) primaryIndicatorDark else primaryIndicatorLight,
+        primaryIndicator = if (isCustomColorEnabled) {
+            colorScheme.primaryContainer
+        } else if (isInDarkTheme) {
+            primaryIndicatorDark
+        } else {
+            primaryIndicatorLight
+        },
         serviceBackgroundWithGroups = if (isInDarkTheme) serviceBackgroundWithGroupsDark else serviceBackgroundWithGroupsLight,
         switchTrack = if (isInDarkTheme) switchTrackDark else switchTrackLight,
         switchThumb = if (isInDarkTheme) switchThumbDark else switchThumbLight,
@@ -88,6 +101,35 @@ fun MainAppTheme(
         )
     }
 }
+
+private fun customColorScheme(seedArgb: Int, isDark: Boolean): ColorScheme {
+    val base = if (isDark) OverriddenDarkColors else OverriddenLightColors
+    val primary = Color(seedArgb or 0xFF000000.toInt())
+    val onPrimary = primary.contrastingContentColor()
+    val containerAlpha = if (isDark) 0.24f else 0.12f
+    val primaryContainer = primary.copy(alpha = containerAlpha).compositeOver(base.surface)
+    val onPrimaryContainer = primaryContainer.contrastingContentColor()
+
+    return base.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondary = primary,
+        onSecondary = onPrimary,
+        secondaryContainer = primaryContainer,
+        onSecondaryContainer = onPrimaryContainer,
+        tertiary = primary,
+        onTertiary = onPrimary,
+        tertiaryContainer = primaryContainer,
+        onTertiaryContainer = onPrimaryContainer,
+        inversePrimary = primary,
+        surfaceTint = primary,
+    )
+}
+
+private fun Color.contrastingContentColor(): Color =
+    if (luminance() > 0.179f) Color.Black else Color.White
 
 @Composable
 fun LockScreenOrientation(orientation: Int) {

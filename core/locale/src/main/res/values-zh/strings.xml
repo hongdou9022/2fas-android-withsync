@@ -967,4 +967,8 @@
     <string name="pass_promo_banner_negative_cta">不再显示</string>
     <string name="appearance_dynamic_colors">动态色彩</string>
     <string name="appearance_dynamic_colors_description">根据您的壁纸动态更改应用颜色。</string>
+    <string name="appearance_custom_colors">自定义色彩</string>
+    <string name="appearance_custom_colors_description">使用你选择的颜色作为应用主色。</string>
+    <string name="appearance_custom_color">主题颜色</string>
+    <string name="appearance_custom_color_description">从调色盘中选择应用主色。</string>
 </resources>

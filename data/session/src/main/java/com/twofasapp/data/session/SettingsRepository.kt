@@ -21,4 +21,6 @@ interface SettingsRepository {
     suspend fun setAllowScreenshots(allow: Boolean)
     suspend fun setHideCodes(hideCodes: Boolean)
     suspend fun setDynamicColors(dynamicColors: Boolean)
+    suspend fun setCustomColors(customColors: Boolean)
+    suspend fun setCustomColor(customColor: Long)
 }

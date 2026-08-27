@@ -80,15 +80,35 @@ internal class AppSettingsViewModel(
 
     fun toggleDynamicColors() {
         launchScoped {
-            val shouldRecreate = uiState.value.appSettings.dynamicColors.not() != uiState.value.appSettings.dynamicColors
+            val enabled = uiState.value.appSettings.dynamicColors.not()
 
-            settingsRepository.setDynamicColors(uiState.value.appSettings.dynamicColors.not())
-
-            if (shouldRecreate) {
-                uiState.update {
-                    it.copy(events = it.events.plus(AppSettingsUiEvent.Recreate))
-                }
+            if (enabled) {
+                settingsRepository.setCustomColors(false)
             }
+            settingsRepository.setDynamicColors(enabled)
+            recreate()
+        }
+    }
+
+    fun disableCustomColors() {
+        launchScoped {
+            settingsRepository.setCustomColors(false)
+            recreate()
+        }
+    }
+
+    fun setCustomColor(customColor: Long) {
+        launchScoped {
+            settingsRepository.setDynamicColors(false)
+            settingsRepository.setCustomColor(customColor)
+            settingsRepository.setCustomColors(true)
+            recreate()
+        }
+    }
+
+    private fun recreate() {
+        uiState.update {
+            it.copy(events = it.events.plus(AppSettingsUiEvent.Recreate))
         }
     }
 }
