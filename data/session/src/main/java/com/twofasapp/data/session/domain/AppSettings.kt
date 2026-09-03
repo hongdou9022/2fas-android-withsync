@@ -13,6 +13,7 @@ data class AppSettings(
     val servicesStyle: ServicesStyle = ServicesStyle.Default,
     val servicesSort: ServicesSort = ServicesSort.Manual,
     val hideCodes: Boolean = false,
+    val skipBrowserRequestAuth: Boolean = false,
     val dynamicColors: Boolean = false,
     val customColors: Boolean = false,
     val customColor: Long = DefaultCustomColor,

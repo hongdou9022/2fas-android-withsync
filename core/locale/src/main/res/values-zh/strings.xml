@@ -752,6 +752,8 @@
     <string name="tokens__add_manual_advanced">高级令牌设置</string>
     <string name="tokens__add_manual_additional_info">其他信息</string>
     <string name="tokens__add_manual_advanced_description">不建议更改默认令牌设置。只有在您的 2FA 提供商有要求且您有明确指示的情况下才可进行更改。</string>
+    <string name="settings__skip_browser_request_auth">批准浏览器请求时免验证</string>
+    <string name="settings__skip_browser_request_auth_description">批准浏览器扩展的登录请求时，无需验证 PIN 或生物识别。</string>
     <string name="settings__option_screenshots_description">允许应用截图5分钟。</string>
     <string name="settings__option_screenshots">允许截图</string>
     <string name="settings__option_screenshots_confirm_title">允许应用截图？</string>

@@ -83,6 +83,12 @@ internal class SettingsRepositoryImpl(
         }
     }
 
+    override suspend fun setSkipBrowserRequestAuth(skipBrowserRequestAuth: Boolean) {
+        withContext(dispatchers.io) {
+            local.setSkipBrowserRequestAuth(skipBrowserRequestAuth)
+        }
+    }
+
     override suspend fun setDynamicColors(dynamicColors: Boolean) {
         withContext(dispatchers.io) {
             local.setDynamicColors(dynamicColors)

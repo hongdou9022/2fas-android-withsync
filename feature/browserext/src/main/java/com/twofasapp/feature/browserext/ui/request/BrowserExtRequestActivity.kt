@@ -36,15 +36,17 @@ class BrowserExtRequestActivity : ComponentActivity(), AuthAware {
 
         val payload = intent.getParcelableExtra<BrowserExtRequestPayload>(BrowserExtRequestPayload.Key)!!
 
-        authTracker.onBrowserExtRequest()
+        if (appSettings.skipBrowserRequestAuth.not()) {
+            authTracker.onBrowserExtRequest()
 
-        lifecycle.addObserver(
-            AuthLifecycle(
-                authTracker = get(),
-                navigator = get { parametersOf(this) },
-                authAware = this as? AuthAware,
-            ),
-        )
+            lifecycle.addObserver(
+                AuthLifecycle(
+                    authTracker = get(),
+                    navigator = get { parametersOf(this) },
+                    authAware = this as? AuthAware,
+                ),
+            )
+        }
 
         setContent {
             CompositionLocalProvider(

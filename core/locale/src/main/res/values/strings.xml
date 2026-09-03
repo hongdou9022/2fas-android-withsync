@@ -396,6 +396,8 @@
     <string name="settings__app_blocking">Lockout settings</string>
     <string name="settings__skip_app_unlock">Skip app unlock</string>
     <string name="settings__skip_app_unlock_description">Do not require PIN or biometric authentication when opening the app or returning from the background.</string>
+    <string name="settings__skip_browser_request_auth">Skip verification when approving browser requests</string>
+    <string name="settings__skip_browser_request_auth_description">Do not require PIN or biometric authentication when approving login requests from browser extensions.</string>
     <string name="settings__face_id">Face ID</string>
     <string name="settings__touch_id">Touch ID</string>
     <!-- settings__how_many_attempts_header -->

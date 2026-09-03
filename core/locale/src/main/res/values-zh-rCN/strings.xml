@@ -396,6 +396,8 @@
     <string name="settings__app_blocking">锁定设置</string>
     <string name="settings__skip_app_unlock">进入应用时免验证</string>
     <string name="settings__skip_app_unlock_description">启动应用或从后台返回时，无需验证 PIN 或生物识别。</string>
+    <string name="settings__skip_browser_request_auth">批准浏览器请求时免验证</string>
+    <string name="settings__skip_browser_request_auth_description">批准浏览器扩展的登录请求时，无需验证 PIN 或生物识别。</string>
     <string name="settings__face_id">面容 ID</string>
     <string name="settings__touch_id">触控 ID</string>
     <!-- settings__how_many_attempts_header -->

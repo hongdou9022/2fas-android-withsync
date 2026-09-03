@@ -43,7 +43,12 @@ internal class SecurityViewModel(
 
         launchScoped {
             settingsRepository.observeAppSettings().collect { appSettings ->
-                uiState.update { it.copy(allowScreenshots = appSettings.allowScreenshots) }
+                uiState.update {
+                    it.copy(
+                        allowScreenshots = appSettings.allowScreenshots,
+                        skipBrowserRequestAuth = appSettings.skipBrowserRequestAuth,
+                    )
+                }
             }
         }
     }
@@ -63,9 +68,15 @@ internal class SecurityViewModel(
         }
     }
 
-    fun toggleSkipAppUnlock() {
+    fun updateSkipAppUnlock(isEnabled: Boolean) {
         launchScoped {
-            securityRepository.editSkipAppUnlock(uiState.value.skipAppUnlock.not())
+            securityRepository.editSkipAppUnlock(isEnabled)
+        }
+    }
+
+    fun updateSkipBrowserRequestAuth(isEnabled: Boolean) {
+        launchScoped {
+            settingsRepository.setSkipBrowserRequestAuth(isEnabled)
         }
     }
 

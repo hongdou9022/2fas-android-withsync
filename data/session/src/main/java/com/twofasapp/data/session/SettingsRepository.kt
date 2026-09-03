@@ -20,6 +20,7 @@ interface SettingsRepository {
     suspend fun setSendCrashLogs(sendCrashLogs: Boolean)
     suspend fun setAllowScreenshots(allow: Boolean)
     suspend fun setHideCodes(hideCodes: Boolean)
+    suspend fun setSkipBrowserRequestAuth(skipBrowserRequestAuth: Boolean)
     suspend fun setDynamicColors(dynamicColors: Boolean)
     suspend fun setCustomColors(customColors: Boolean)
     suspend fun setCustomColor(customColor: Long)

@@ -11,5 +11,6 @@ internal data class SecurityUiState(
     val pinTimeout: PinTimeout = PinTimeout.Timeout5,
     val pinDigits: PinDigits = PinDigits.Code4,
     val skipAppUnlock: Boolean = false,
+    val skipBrowserRequestAuth: Boolean = false,
     val allowScreenshots: Boolean = false,
 )

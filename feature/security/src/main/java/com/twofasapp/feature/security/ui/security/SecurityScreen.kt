@@ -1,6 +1,8 @@
 package com.twofasapp.feature.security.ui.security
 
 import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Divider
@@ -18,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.twofasapp.android.navigation.intentFor
 import com.twofasapp.core.design.MdtIcons
 import com.twofasapp.core.design.MdtTheme
 import com.twofasapp.core.design.feature.settings.SettingsDivider
@@ -32,6 +35,7 @@ import com.twofasapp.data.session.domain.PinTimeout
 import com.twofasapp.data.session.domain.PinTrials
 import com.twofasapp.feature.security.biometric.BiometricKeyProvider
 import com.twofasapp.feature.security.ui.biometric.BiometricDialog
+import com.twofasapp.feature.security.ui.lock.LockActivity
 import com.twofasapp.locale.R
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -46,6 +50,22 @@ internal fun SecurityScreen(
 ) {
     val uiState = viewModel.uiState.collectAsState().value
     val activity = (LocalContext.current as? Activity)
+    val skipAppUnlockLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                viewModel.updateSkipAppUnlock(true)
+            }
+        },
+    )
+    val browserRequestAuthLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                viewModel.updateSkipBrowserRequestAuth(true)
+            }
+        },
+    )
 
     var showTrailsDialog by remember { mutableStateOf(false) }
     var showTimeoutDialog by remember { mutableStateOf(false) }
@@ -128,7 +148,33 @@ internal fun SecurityScreen(
                         subtitle = stringResource(id = R.string.settings__skip_app_unlock_description),
                         icon = MdtIcons.LockOpen,
                         checked = uiState.skipAppUnlock,
-                        onCheckedChange = { viewModel.toggleSkipAppUnlock() },
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                activity?.let {
+                                    skipAppUnlockLauncher.launch(it.intentFor<LockActivity>("canGoBack" to true))
+                                }
+                            } else {
+                                viewModel.updateSkipAppUnlock(false)
+                            }
+                        },
+                    )
+                }
+
+                item {
+                    SettingsSwitch(
+                        title = stringResource(id = R.string.settings__skip_browser_request_auth),
+                        subtitle = stringResource(id = R.string.settings__skip_browser_request_auth_description),
+                        icon = MdtIcons.Extension,
+                        checked = uiState.skipBrowserRequestAuth,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                activity?.let {
+                                    browserRequestAuthLauncher.launch(it.intentFor<LockActivity>("canGoBack" to true))
+                                }
+                            } else {
+                                viewModel.updateSkipBrowserRequestAuth(false)
+                            }
+                        },
                     )
                 }
 

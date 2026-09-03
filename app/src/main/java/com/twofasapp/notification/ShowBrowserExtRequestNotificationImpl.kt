@@ -13,6 +13,7 @@ import com.twofasapp.data.push.notification.NotificationChannelProvider
 import com.twofasapp.data.push.notification.ShowBrowserExtRequestNotification
 import com.twofasapp.data.services.ServicesRepository
 import com.twofasapp.data.session.SecurityRepository
+import com.twofasapp.data.session.SettingsRepository
 import com.twofasapp.data.session.domain.LockMethod
 import com.twofasapp.feature.browserext.notification.BrowserExtRequestPayload
 import com.twofasapp.feature.browserext.notification.BrowserExtRequestReceiver
@@ -26,6 +27,7 @@ class ShowBrowserExtRequestNotificationImpl(
     private val notificationManager: NotificationManager,
     private val notificationChannelProvider: NotificationChannelProvider,
     private val securityRepository: SecurityRepository,
+    private val settingsRepository: SettingsRepository,
     private val servicesRepository: ServicesRepository,
     private val browserExtRepository: BrowserExtRepository,
 ) : ShowBrowserExtRequestNotification {
@@ -150,9 +152,12 @@ class ShowBrowserExtRequestNotificationImpl(
         )
 
         val lockMethod = securityRepository.getLockMethod()
+        val shouldAuthenticate = action == BrowserExtRequestPayload.Action.Approve &&
+            settingsRepository.getAppSettings().skipBrowserRequestAuth.not() &&
+            (lockMethod != LockMethod.NoLock || keyguardManager.isKeyguardLocked)
 
         return when {
-            lockMethod != LockMethod.NoLock || keyguardManager.isKeyguardLocked -> {
+            shouldAuthenticate -> {
                 val contentIntent = Intent(context, BrowserExtRequestApproveActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 

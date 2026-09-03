@@ -19,16 +19,17 @@ class BrowserExtRequestApproveActivity : ComponentActivity(), AuthAware {
     private val authTracker: AuthTracker by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val appSettings = settingsRepository.getAppSettings()
         ActivityHelper.onCreate(
             activity = this,
-            selectedTheme = settingsRepository.getAppSettings().selectedTheme,
-            allowScreenshots = settingsRepository.getAppSettings().allowScreenshots,
+            selectedTheme = appSettings.selectedTheme,
+            allowScreenshots = appSettings.allowScreenshots,
         )
         super.onCreate(savedInstanceState)
 
         val payload = intent.getParcelableExtra<BrowserExtRequestPayload>(BrowserExtRequestPayload.Key)!!
 
-        if (payload.action == BrowserExtRequestPayload.Action.Deny) {
+        if (payload.action == BrowserExtRequestPayload.Action.Deny || appSettings.skipBrowserRequestAuth) {
             sendBroadcast(BrowserExtRequestReceiver.createIntent(this, payload))
             finish()
         } else {

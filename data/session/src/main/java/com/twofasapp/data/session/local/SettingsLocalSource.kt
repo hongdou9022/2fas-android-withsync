@@ -32,6 +32,7 @@ internal class SettingsLocalSource(
         private const val KeySendCrashLogs = "sendCrashLogs"
         private const val KeyAllowScreenshots = "allowScreenshots"
         private const val KeyHideCodes = "hideCodes"
+        private const val KeySkipBrowserRequestAuth = "skipBrowserRequestAuth"
     }
 
     private val appSettingsFlow: MutableStateFlow<AppSettings> by lazy {
@@ -58,6 +59,7 @@ internal class SettingsLocalSource(
             servicesStyle = preferences.getString(KeyServicesStyle)?.let { ServicesStyle.valueOf(it) } ?: ServicesStyle.Default,
             servicesSort = preferences.getString(KeyServicesSort)?.let { ServicesSort.valueOf(it) } ?: ServicesSort.Manual,
             hideCodes = preferences.getBoolean(KeyHideCodes) ?: false,
+            skipBrowserRequestAuth = preferences.getBoolean(KeySkipBrowserRequestAuth) ?: false,
             dynamicColors = preferences.getBoolean(KeyDynamicColors) ?: false,
             customColors = preferences.getBoolean(KeyCustomColors) ?: false,
             customColor = preferences.getLong(KeyCustomColor) ?: DefaultCustomColor,
@@ -127,5 +129,10 @@ internal class SettingsLocalSource(
     fun setHideCodes(hideCodes: Boolean) {
         appSettingsFlow.update { it.copy(hideCodes = hideCodes) }
         preferences.putBoolean(KeyHideCodes, hideCodes)
+    }
+
+    fun setSkipBrowserRequestAuth(skipBrowserRequestAuth: Boolean) {
+        appSettingsFlow.update { it.copy(skipBrowserRequestAuth = skipBrowserRequestAuth) }
+        preferences.putBoolean(KeySkipBrowserRequestAuth, skipBrowserRequestAuth)
     }
 }
