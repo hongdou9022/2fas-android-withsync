@@ -97,6 +97,10 @@ internal class BrowserExtRepositoryImpl(
     }
 
     override suspend fun getPairedBrowser(id: String): PairedBrowser {
+        localSource.observePairedBrowsers().first().firstOrNull { it.id == id }?.let { return it }
+
+        fetchPairedBrowsers()
+
         return localSource.observePairedBrowsers().first().first { it.id == id }
     }
 
